@@ -53,7 +53,7 @@ const app = express();
 const port = process.env.PORT || 3001;
 
 app.use(express.json());
-app.use(cors({ origin: 'http://localhost:3002' }));
+app.use(cors({ origin: ['http://localhost:3000', 'http://localhost:3003', 'http://localhost:3004', 'http://localhost:3002'] }));
 
 app.get('/generate-question', async (req, res) => {
   try {
