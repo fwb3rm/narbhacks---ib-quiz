@@ -1,10 +1,7 @@
 "use client";
 
 import {
-  ArrowRight,
   Brain,
-  CheckCircle,
-  Clock,
   Loader2,
   Play,
   Star,

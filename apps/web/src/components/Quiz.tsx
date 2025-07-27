@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useMutation, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import { ProgressService } from "@/lib/progress";
 
 interface QuestionType {
   question: string;
@@ -214,7 +215,19 @@ export default function Quiz() {
         0
       );
 
+      // Save to both Convex and localStorage for now
       saveQuizResult({
+        date: new Date().toISOString(),
+        score,
+        totalQuestions: answeredQuestions.length,
+        correctAnswers,
+        accuracy: Math.round((correctAnswers / answeredQuestions.length) * 100),
+        timeTaken: totalTimeTaken,
+        questions: answeredQuestions,
+      });
+      
+      // Also save to localStorage for backward compatibility
+      ProgressService.saveQuizResult({
         date: new Date().toISOString(),
         score,
         totalQuestions: answeredQuestions.length,
