@@ -3,7 +3,8 @@
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { ProgressService } from "@/lib/progress";
+import { useMutation, useAction } from "convex/react";
+import { api } from "../../convex/_generated/api";
 
 interface QuestionType {
   question: string;
@@ -18,6 +19,8 @@ interface QuestionType {
 }
 
 export default function Quiz() {
+  const saveQuizResult = useMutation(api.quiz.saveQuizResult);
+  const generateQuestion = useAction(api.quiz.generateQuestion);
   const [question, setQuestion] = useState<QuestionType | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
@@ -98,10 +101,7 @@ export default function Quiz() {
     try {
       const nextDifficulty = getNextDifficulty();
       console.log(`Requesting question with difficulty: ${nextDifficulty}`);
-      const res = await fetch(
-        `/api/generate-question?difficulty=${nextDifficulty}`
-      );
-      const data = await res.json();
+      const data = await generateQuestion({ difficulty: nextDifficulty });
       console.log(`Received question with difficulty: ${data.difficulty}`);
       setQuestion(data);
       setSelected(null);
@@ -117,7 +117,7 @@ export default function Quiz() {
     } finally {
       setIsLoading(false);
     }
-  }, [getNextDifficulty]);
+  }, [getNextDifficulty, generateQuestion]);
 
   useEffect(() => {
     fetchQuestion();
@@ -214,7 +214,7 @@ export default function Quiz() {
         0
       );
 
-      ProgressService.saveQuizResult({
+      saveQuizResult({
         date: new Date().toISOString(),
         score,
         totalQuestions: answeredQuestions.length,

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { ConvexProvider } from "convex/react";
+import { convex } from "@/lib/convex";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -22,7 +24,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="scroll-smooth">
       <body className={`${inter.className} antialiased bg-gray-50`}>
-        {children}
+        <ConvexProvider client={convex}>
+          {children}
+        </ConvexProvider>
       </body>
     </html>
   );

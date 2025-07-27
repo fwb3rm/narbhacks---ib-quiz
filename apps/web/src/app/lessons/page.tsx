@@ -19,12 +19,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import {
-  type Lesson,
-  type LessonRecommendation,
-  LessonService,
-} from "@/lib/lessons";
-import { ProgressService, type PerformanceInsight, type QuestionHistory } from "@/lib/progress";
+import { useAction, useMutation, useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
 
 // All potential lesson topics from the quiz API
 const ALL_LESSON_TOPICS = {
