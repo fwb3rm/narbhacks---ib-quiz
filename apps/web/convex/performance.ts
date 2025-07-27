@@ -121,10 +121,11 @@ export const savePerformanceAnalysis = internalMutation({
     if (existing) {
       // Update existing analysis
       return await ctx.db.patch(existing._id, {
-        performanceData: args.performanceData,
+        accuracy: args.performanceData.accuracy,
+        totalQuestions: args.performanceData.totalQuestions,
+        correctAnswers: args.performanceData.correctAnswers,
         wrongAnswers: args.wrongAnswers,
         patterns: args.patterns,
-        analysis: args.analysis,
         lastUpdated: args.lastUpdated,
       });
     } else {
