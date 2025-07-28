@@ -21,7 +21,7 @@ interface QuestionType {
 
 export default function Quiz() {
   const saveQuizResult = useMutation(api.quiz.saveQuizResult);
-  const generateQuestion = useAction(api.quiz.generateQuestion);
+  // Quiz component updated to use hardcoded questions - NO CONVEX CALLS
   const [question, setQuestion] = useState<QuestionType | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
@@ -102,8 +102,64 @@ export default function Quiz() {
     try {
       const nextDifficulty = getNextDifficulty();
       console.log(`Requesting question with difficulty: ${nextDifficulty}`);
-      const data = await generateQuestion({ difficulty: nextDifficulty });
-      console.log(`Received question with difficulty: ${data.difficulty}`);
+      
+      // Use hardcoded questions for now
+      const questions = [
+        {
+          question: "What is the primary purpose of a P/E ratio in valuation?",
+          options: [
+            "To measure a company's debt levels",
+            "To compare a company's stock price to its earnings",
+            "To calculate a company's cash flow",
+            "To determine a company's market share",
+          ],
+          answer: "To compare a company's stock price to its earnings",
+          explanation: "The P/E ratio compares a company's stock price to its earnings per share, helping investors assess valuation.",
+          category: "Investment Banking",
+          subcategory: "Valuation",
+          difficulty: nextDifficulty,
+          points: 100,
+          type: "pre-generated" as const,
+        },
+        {
+          question: "What is EBITDA?",
+          options: [
+            "Earnings Before Interest, Taxes, Depreciation, and Amortization",
+            "Earnings Before Interest and Taxes",
+            "Earnings Before Depreciation and Amortization",
+            "Earnings Before Taxes",
+          ],
+          answer: "Earnings Before Interest, Taxes, Depreciation, and Amortization",
+          explanation: "EBITDA is a measure of a company's operating performance.",
+          category: "Investment Banking",
+          subcategory: "Accounting",
+          difficulty: nextDifficulty,
+          points: 100,
+          type: "pre-generated" as const,
+        },
+        {
+          question: "What is the main purpose of a DCF valuation?",
+          options: [
+            "To determine a company's current market value",
+            "To estimate a company's intrinsic value based on future cash flows",
+            "To calculate a company's book value",
+            "To assess a company's historical performance",
+          ],
+          answer: "To estimate a company's intrinsic value based on future cash flows",
+          explanation: "DCF valuation estimates a company's intrinsic value by discounting its projected future cash flows to present value.",
+          category: "Investment Banking",
+          subcategory: "Valuation",
+          difficulty: nextDifficulty,
+          points: 150,
+          type: "pre-generated" as const,
+        }
+      ];
+      
+      // Pick a random question
+      const randomIndex = Math.floor(Math.random() * questions.length);
+      const data = questions[randomIndex];
+      
+      console.log(`Selected question: ${data.question}`);
       setQuestion(data);
       setSelected(null);
       setFeedback("");
@@ -115,10 +171,15 @@ export default function Quiz() {
       setQuestionType(data.type || "pre-generated");
     } catch (error) {
       console.error("Failed to fetch question:", error);
+      setFeedback("Failed to load question. Please try again.");
+      setShowNotification(true);
+      setTimeout(() => {
+        setShowNotification(false);
+      }, 3000);
     } finally {
       setIsLoading(false);
     }
-  }, [getNextDifficulty, generateQuestion]);
+  }, [getNextDifficulty]);
 
   useEffect(() => {
     fetchQuestion();
