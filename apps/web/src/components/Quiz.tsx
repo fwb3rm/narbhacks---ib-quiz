@@ -3,7 +3,7 @@
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { useMutation, useAction } from "convex/react";
+import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { ProgressService } from "@/lib/progress";
 
@@ -21,7 +21,7 @@ interface QuestionType {
 
 export default function Quiz() {
   const saveQuizResult = useMutation(api.quiz.saveQuizResult);
-  // Quiz component updated to use hardcoded questions - NO CONVEX CALLS
+  // Quiz component updated to use hardcoded questions - NO CONVEX CALLS - VERCEL FIX
   const [question, setQuestion] = useState<QuestionType | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
