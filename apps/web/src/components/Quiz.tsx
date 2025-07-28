@@ -21,7 +21,7 @@ interface QuestionType {
 
 export default function Quiz() {
   const saveQuizResult = useMutation(api.quiz.saveQuizResult);
-  // Quiz component updated to use hardcoded questions - NO CONVEX CALLS - VERCEL FIX
+  // Quiz component updated to use hardcoded questions - NO CONVEX CALLS - VERCEL FIX - FORCE NEW DEPLOYMENT
   const [question, setQuestion] = useState<QuestionType | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
@@ -102,6 +102,7 @@ export default function Quiz() {
     try {
       const nextDifficulty = getNextDifficulty();
       console.log(`Requesting question with difficulty: ${nextDifficulty}`);
+      console.log("USING HARDCODED QUESTIONS - NO CONVEX CALLS");
       
       // Use hardcoded questions for now
       const questions = [
