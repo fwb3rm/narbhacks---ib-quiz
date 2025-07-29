@@ -38,7 +38,10 @@ export class LessonService {
     subcategory: string,
     difficulty: "beginner" | "intermediate" | "advanced"
   ): Promise<Lesson> {
-    const prompt = LessonService.buildPersonalizedLessonPrompt(subcategory, difficulty);
+    const prompt = LessonService.buildPersonalizedLessonPrompt(
+      subcategory,
+      difficulty
+    );
 
     try {
       const response = await fetch("http://localhost:3003/generate-lesson", {
@@ -88,8 +91,10 @@ export class LessonService {
   ): string {
     // Get user's performance data for this subcategory
     const { ProgressService } = require("./progress");
-    const performanceInsights = ProgressService.getPerformanceInsights(subcategory);
-    const wrongAnswers = ProgressService.getWrongAnswersBySubcategory(subcategory);
+    const performanceInsights =
+      ProgressService.getPerformanceInsights(subcategory);
+    const wrongAnswers =
+      ProgressService.getWrongAnswersBySubcategory(subcategory);
     const patterns = ProgressService.analyzeWrongAnswerPatterns(subcategory);
 
     // Build personalized context
@@ -105,15 +110,19 @@ PERSONALIZED CONTEXT FOR THIS STUDENT:
 - Average time on wrong answers: ${performanceInsights.patterns.averageTimeOnWrongAnswers} seconds
 - Improvement trend: ${performanceInsights.patterns.improvementTrend}
 - Most frequent wrong answer: "${performanceInsights.patterns.mostFrequentWrongAnswer}"
-- Conceptual gaps: ${performanceInsights.conceptualGaps.join(', ')}
-- Recommended focus areas: ${performanceInsights.recommendedFocus.join(', ')}
+- Conceptual gaps: ${performanceInsights.conceptualGaps.join(", ")}
+- Recommended focus areas: ${performanceInsights.recommendedFocus.join(", ")}
 
 SPECIFIC WRONG ANSWERS TO ADDRESS:
 `;
 
       // Include specific wrong answers (limit to 5 most recent)
       const recentWrongAnswers = wrongAnswers
-        .sort((a: any, b: any) => new Date(b.dateAnswered).getTime() - new Date(a.dateAnswered).getTime())
+        .sort(
+          (a: any, b: any) =>
+            new Date(b.dateAnswered).getTime() -
+            new Date(a.dateAnswered).getTime()
+        )
         .slice(0, 5);
 
       recentWrongAnswers.forEach((wrong: any, index: number) => {
@@ -128,7 +137,7 @@ ${index + 1}. Question: "${wrong.questionText.substring(0, 100)}..."
       if (patterns.commonMistakes.length > 0) {
         wrongAnswerContext += `
 COMMON MISTAKE PATTERNS:
-${patterns.commonMistakes.map((mistake: string, index: number) => `${index + 1}. ${mistake}`).join('\n')}
+${patterns.commonMistakes.map((mistake: string, index: number) => `${index + 1}. ${mistake}`).join("\n")}
 `;
       }
     }
@@ -197,7 +206,8 @@ Focus on making this lesson specifically address the student's weaknesses and co
       let reason = "";
 
       // Get detailed performance insights
-      const performanceInsights = ProgressService.getPerformanceInsights(subcategory);
+      const performanceInsights =
+        ProgressService.getPerformanceInsights(subcategory);
 
       if (stats.accuracy < 50) {
         difficulty = "beginner";
@@ -347,33 +357,43 @@ Focus on making this lesson specifically address the student's weaknesses and co
     focusAreas: string[];
   }> {
     const { ProgressService } = require("./progress");
-    const performanceInsights = ProgressService.getPerformanceInsights(subcategory);
-    const wrongAnswers = ProgressService.getWrongAnswersBySubcategory(subcategory);
+    const performanceInsights =
+      ProgressService.getPerformanceInsights(subcategory);
+    const wrongAnswers =
+      ProgressService.getWrongAnswersBySubcategory(subcategory);
 
     // Build prompt for targeted practice
     const prompt = `Generate 5 targeted practice questions for "${subcategory}" based on these wrong answers:
 
-${wrongAnswers.slice(0, 3).map((wrong: any, index: number) => `
+${wrongAnswers
+  .slice(0, 3)
+  .map(
+    (wrong: any, index: number) => `
 ${index + 1}. Student answered: "${wrong.userAnswer}" (Correct: "${wrong.correctAnswer}")
    Question: "${wrong.questionText.substring(0, 100)}..."
-`).join('\n')}
+`
+  )
+  .join("\n")}
 
-Common mistakes: ${performanceInsights.patterns.commonMistakes.join(', ')}
+Common mistakes: ${performanceInsights.patterns.commonMistakes.join(", ")}
 
 Generate questions that specifically address these weaknesses and common mistakes.`;
 
     try {
-      const response = await fetch("http://localhost:3003/generate-targeted-practice", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          subcategory,
-          prompt,
-          wrongAnswers: wrongAnswers.slice(0, 5),
-        }),
-      });
+      const response = await fetch(
+        "http://localhost:3003/generate-targeted-practice",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            subcategory,
+            prompt,
+            wrongAnswers: wrongAnswers.slice(0, 5),
+          }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);

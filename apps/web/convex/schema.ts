@@ -18,19 +18,23 @@ export default defineSchema({
     correctAnswers: v.number(),
     accuracy: v.number(),
     timeTaken: v.number(),
-    questions: v.array(v.object({
-      question: v.string(),
-      userAnswer: v.string(),
-      correctAnswer: v.string(),
-      explanation: v.string(),
-      isCorrect: v.boolean(),
-      category: v.string(),
-      subcategory: v.optional(v.string()),
-      difficulty: v.string(),
-      points: v.number(),
-      timeTaken: v.number(),
-    })),
-  }).index("by_user", ["userId"]).index("by_date", ["date"]),
+    questions: v.array(
+      v.object({
+        question: v.string(),
+        userAnswer: v.string(),
+        correctAnswer: v.string(),
+        explanation: v.string(),
+        isCorrect: v.boolean(),
+        category: v.string(),
+        subcategory: v.optional(v.string()),
+        difficulty: v.string(),
+        points: v.number(),
+        timeTaken: v.number(),
+      })
+    ),
+  })
+    .index("by_user", ["userId"])
+    .index("by_date", ["date"]),
 
   // Lessons table to store generated lessons
   lessons: defineTable({
@@ -40,21 +44,27 @@ export default defineSchema({
     difficulty: v.string(),
     content: v.object({
       summary: v.string(),
-      keyConcepts: v.array(v.object({
-        title: v.string(),
-        explanation: v.string(),
-        example: v.string(),
-      })),
+      keyConcepts: v.array(
+        v.object({
+          title: v.string(),
+          explanation: v.string(),
+          example: v.string(),
+        })
+      ),
       commonMistakes: v.array(v.string()),
-      practiceQuestions: v.array(v.object({
-        question: v.string(),
-        options: v.array(v.string()),
-        answer: v.string(),
-        explanation: v.string(),
-      })),
+      practiceQuestions: v.array(
+        v.object({
+          question: v.string(),
+          options: v.array(v.string()),
+          answer: v.string(),
+          explanation: v.string(),
+        })
+      ),
     }),
     createdAt: v.number(),
-  }).index("by_user", ["userId"]).index("by_subcategory", ["subcategory"]),
+  })
+    .index("by_user", ["userId"])
+    .index("by_subcategory", ["subcategory"]),
 
   // Questions table to store AI-generated questions
   questions: defineTable({
@@ -68,7 +78,9 @@ export default defineSchema({
     points: v.number(),
     type: v.union(v.literal("pre-generated"), v.literal("ai-generated")),
     createdAt: v.number(),
-  }).index("by_difficulty", ["difficulty"]).index("by_category", ["category"]),
+  })
+    .index("by_difficulty", ["difficulty"])
+    .index("by_category", ["category"]),
 
   // Performance insights table for detailed analysis
   performanceInsights: defineTable({
@@ -77,14 +89,18 @@ export default defineSchema({
     accuracy: v.number(),
     totalQuestions: v.number(),
     correctAnswers: v.number(),
-    wrongAnswers: v.array(v.object({
-      question: v.string(),
-      userAnswer: v.string(),
-      correctAnswer: v.string(),
-      explanation: v.string(),
-      date: v.string(),
-    })),
+    wrongAnswers: v.array(
+      v.object({
+        question: v.string(),
+        userAnswer: v.string(),
+        correctAnswer: v.string(),
+        explanation: v.string(),
+        date: v.string(),
+      })
+    ),
     patterns: v.array(v.string()),
     lastUpdated: v.number(),
-  }).index("by_user", ["userId"]).index("by_subcategory", ["subcategory"]),
-}); 
+  })
+    .index("by_user", ["userId"])
+    .index("by_subcategory", ["subcategory"]),
+});

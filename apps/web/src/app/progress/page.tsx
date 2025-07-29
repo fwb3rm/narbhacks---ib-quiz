@@ -1,339 +1,241 @@
 "use client";
 
+import { useQuery } from "convex/react";
 import {
-  ArrowLeft,
+  Activity,
   BarChart3,
-  Brain,
-  Calendar,
+  BookOpen,
+  CheckCircle,
   Clock,
   Target,
-  Target as TargetIcon,
   TrendingUp,
-  Trophy,
-  Users,
-  Zap,
+  XCircle,
 } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { ProgressService } from "@/lib/progress";
+import { useState } from "react";
+import { api } from "../../../convex/_generated/api";
 
-interface QuizResult {
-  id: string;
-  date: string;
-  score: number;
-  totalQuestions: number;
-  correctAnswers: number;
-  accuracy: number;
-  timeTaken: number;
-  questions: Array<{
-    question: string;
-    userAnswer: string;
-    correctAnswer: string;
-    explanation: string;
-    isCorrect: boolean;
-    category: string;
-    subcategory?: string;
-    difficulty: string;
-    points: number;
-    timeTaken: number;
-  }>;
-}
+// Simple line chart component
+const LineChart = ({
+  data,
+  title,
+  color,
+  showPercentage = false,
+}: {
+  data: Array<{ date: string; value: number }>;
+  title: string;
+  color: string;
+  showPercentage?: boolean;
+}) => {
+  if (data.length === 0) return null;
 
-export default function ProgressPage() {
-  const [quizHistory, setQuizHistory] = useState<QuizResult[]>([]);
-  const [selectedPeriod, setSelectedPeriod] = useState<
-    "week" | "month" | "all"
-  >("week");
-  const [chartMetric, setChartMetric] = useState<
-    "questions" | "score" | "accuracy"
-  >("score");
-  const [subcategoryView, setSubcategoryView] = useState<"best" | "worst">(
-    "best"
-  );
+  const maxValue = Math.max(...data.map((d) => d.value));
+  const minValue = Math.min(...data.map((d) => d.value));
+  const range = maxValue - minValue;
 
-  // Load real quiz data from localStorage
-  useEffect(() => {
-    const loadQuizData = () => {
-      const results = ProgressService.getResultsByPeriod(selectedPeriod);
-      setQuizHistory(results);
-    };
+  // Calculate padding for labels
+  const labelHeight = 20;
+  const chartHeight = 120;
+  const totalHeight = chartHeight + labelHeight;
 
-    loadQuizData();
-  }, [selectedPeriod]);
-
-  const getFilteredHistory = () => {
-    return quizHistory.sort(
-      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
-    );
-  };
-
-  const getAverageScore = () => {
-    const filtered = getFilteredHistory();
-    if (filtered.length === 0) return 0;
-    return Math.round(
-      filtered.reduce((sum, result) => sum + result.score, 0) / filtered.length
-    );
-  };
-
-  const getTotalQuizzes = () => {
-    return getFilteredHistory().length;
-  };
-
-  const getBestScore = () => {
-    const filtered = getFilteredHistory();
-    if (filtered.length === 0) return 0;
-    return Math.max(...filtered.map((result) => result.score));
-  };
-
-  const getAverageTimePerQuestion = () => {
-    const filtered = getFilteredHistory();
-    if (filtered.length === 0) return 0;
-    
-    const totalTime = filtered.reduce((sum, result) => sum + result.timeTaken, 0);
-    const totalQuestions = filtered.reduce((sum, result) => sum + result.totalQuestions, 0);
-    
-    if (totalQuestions === 0) return 0;
-    return Math.round(totalTime / totalQuestions);
-  };
-
-  const getCategoryPerformance = () => {
-    const filtered = getFilteredHistory();
-    const categoryStats: {
-      [key: string]: { total: number; correct: number; percentage: number };
-    } = {};
-
-    filtered.forEach((result) => {
-      result.questions.forEach((q) => {
-        const category = q.category;
-        if (!categoryStats[category]) {
-          categoryStats[category] = { total: 0, correct: 0, percentage: 0 };
-        }
-        categoryStats[category].total++;
-        if (q.isCorrect) {
-          categoryStats[category].correct++;
-        }
-      });
-    });
-
-    // Calculate percentages
-    Object.keys(categoryStats).forEach((category) => {
-      const stats = categoryStats[category];
-      stats.percentage = Math.round((stats.correct / stats.total) * 100);
-    });
-
-    return categoryStats;
-  };
-
-  const getSubcategoryPerformance = () => {
-    const filtered = getFilteredHistory();
-    const subcategoryStats: {
-      [key: string]: { total: number; correct: number; percentage: number };
-    } = {};
-
-    filtered.forEach((result) => {
-      result.questions.forEach((q) => {
-        if (q.subcategory) {
-          const subcategory = q.subcategory;
-          if (!subcategoryStats[subcategory]) {
-            subcategoryStats[subcategory] = {
-              total: 0,
-              correct: 0,
-              percentage: 0,
-            };
-          }
-          subcategoryStats[subcategory].total++;
-          if (q.isCorrect) {
-            subcategoryStats[subcategory].correct++;
-          }
-        }
-      });
-    });
-
-    // Calculate percentages
-    Object.keys(subcategoryStats).forEach((subcategory) => {
-      const stats = subcategoryStats[subcategory];
-      stats.percentage = Math.round((stats.correct / stats.total) * 100);
-    });
-
-    return subcategoryStats;
-  };
-
-  const getChartData = () => {
-    const filtered = getFilteredHistory();
-    return filtered.map((result) => ({
-      date: new Date(result.date).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-      }),
-      questions: result.totalQuestions,
-      score: result.score,
-      accuracy: result.accuracy,
-      correctAnswers: result.correctAnswers,
-    }));
-  };
-
-  const renderLineChart = () => {
-    const chartData = getChartData();
-    if (chartData.length === 0) {
-      return (
-        <div className="flex items-center justify-center h-64 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
-          <div className="text-center">
-            <BarChart3 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500">No data available yet</p>
-            <p className="text-sm text-gray-400">
-              Complete your first quiz to see progress!
-            </p>
-          </div>
-        </div>
-      );
-    }
-
-    const maxValue = Math.max(
-      ...chartData.map((d) => {
-        if (chartMetric === "questions") return d.questions;
-        if (chartMetric === "score") return d.score;
-        return d.accuracy;
-      })
-    );
-    const minValue = Math.min(
-      ...chartData.map((d) => {
-        if (chartMetric === "questions") return d.questions;
-        if (chartMetric === "score") return d.score;
-        return d.accuracy;
-      })
-    );
-    const range = maxValue - minValue || 1; // Prevent division by zero
-
-    return (
-      <div className="relative">
-        <svg width="100%" height="280" className="overflow-visible">
+  return (
+    <div className="bg-gradient-to-r from-gray-700/20 to-gray-800/20 border border-gray-600/30 rounded-xl p-6">
+      <h3 className="text-lg font-semibold text-white mb-4">{title}</h3>
+      <div className="relative h-48">
+        <svg
+          className="w-full h-full"
+          viewBox={`0 0 ${data.length * 60} ${totalHeight}`}
+        >
           {/* Grid lines */}
-          {[0, 1, 2, 3, 4].map((i) => (
+          {[0, 25, 50, 75, 100].map((y) => (
             <line
-              key={i}
+              key={y}
               x1="0"
-              y1={i * 60 + 40}
-              x2="100%"
-              y2={i * 60 + 40}
-              stroke="#374151"
+              y1={labelHeight + (chartHeight - (y / 100) * chartHeight)}
+              x2={data.length * 60}
+              y2={labelHeight + (chartHeight - (y / 100) * chartHeight)}
+              stroke="rgba(156, 163, 175, 0.2)"
               strokeWidth="1"
-              opacity="0.2"
             />
           ))}
 
-          {/* Y-axis labels */}
-          {[0, 1, 2, 3, 4].map((i) => (
-            <text
-              key={i}
-              x="10"
-              y={i * 60 + 45}
-              className="text-xs text-gray-400"
-              fill="currentColor"
-            >
-              {Math.round(maxValue - (i * range) / 4)}
-            </text>
-          ))}
-
-          {/* Line path */}
-          <path
-            d={chartData
-              .map((point, index) => {
-                const x = index * 60 + 30;
-                const value =
-                  chartMetric === "questions"
-                    ? point.questions
-                    : chartMetric === "score"
-                      ? point.score
-                      : point.accuracy;
-                const y = 240 - ((value - minValue) / range) * 200;
-                return `${index === 0 ? "M" : "L"} ${x} ${y}`;
+          {/* Line chart */}
+          <polyline
+            fill="none"
+            stroke={color}
+            strokeWidth="2"
+            points={data
+              .map((d, i) => {
+                const x = i * 60;
+                const y =
+                  range === 0
+                    ? labelHeight + chartHeight / 2
+                    : labelHeight +
+                      (chartHeight -
+                        ((d.value - minValue) / range) * chartHeight);
+                return `${x},${y}`;
               })
               .join(" ")}
-            stroke="url(#gradient)"
-            strokeWidth="3"
-            fill="none"
-            strokeLinecap="round"
-            strokeLinejoin="round"
           />
 
-          {/* Gradient definition */}
-          <defs>
-            <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#3B82F6" />
-              <stop offset="100%" stopColor="#8B5CF6" />
-            </linearGradient>
-          </defs>
-
-          {/* Data points */}
-          {chartData.map((point, index) => {
-            const x = index * 60 + 30;
-            const value =
-              chartMetric === "questions"
-                ? point.questions
-                : chartMetric === "score"
-                  ? point.score
-                  : point.accuracy;
-            const y = 240 - ((value - minValue) / range) * 200;
+          {/* Data points and labels */}
+          {data.map((d, i) => {
+            const x = i * 60;
+            const y =
+              range === 0
+                ? labelHeight + chartHeight / 2
+                : labelHeight +
+                  (chartHeight - ((d.value - minValue) / range) * chartHeight);
             return (
-              <g key={index}>
+              <g key={i}>
                 <circle
                   cx={x}
                   cy={y}
-                  r="8"
-                  fill="white"
-                  stroke="url(#gradient)"
-                  strokeWidth="3"
-                  className="cursor-pointer hover:r-10 transition-all duration-200"
-                  filter="drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))"
+                  r="4"
+                  fill={color}
+                  className="hover:r-5 transition-all duration-200"
                 />
-                {/* Background rectangle for text */}
-                <rect
-                  x={x - 20}
-                  y={y - 35}
-                  width="40"
-                  height="20"
-                  rx="4"
-                  fill="rgba(0, 0, 0, 0.7)"
-                  className="transition-opacity duration-200"
-                />
+                {/* Value label - positioned above or below based on available space */}
                 <text
                   x={x}
-                  y={y - 20}
+                  y={y > labelHeight + chartHeight / 2 ? y - 8 : y + 16}
                   textAnchor="middle"
-                  className="text-xs font-semibold text-white"
-                  style={{ fontSize: "11px" }}
                   fill="white"
+                  fontSize="10"
+                  fontWeight="bold"
                 >
-                  {chartMetric === "questions"
-                    ? point.questions
-                    : chartMetric === "score"
-                      ? point.score
-                      : point.accuracy}
+                  {showPercentage
+                    ? `${d.value.toFixed(1)}%`
+                    : d.value.toFixed(1)}
                 </text>
               </g>
             );
           })}
-
-          {/* X-axis labels */}
-          {chartData.map((point, index) => (
-            <text
-              key={index}
-              x={index * 60 + 30}
-              y="270"
-              textAnchor="middle"
-              className="text-xs text-gray-400"
-              fill="currentColor"
-            >
-              {point.date}
-            </text>
-          ))}
         </svg>
       </div>
+      <div className="flex justify-between text-xs text-gray-400 mt-2">
+        <span>{data[0]?.date}</span>
+        <span>{data[data.length - 1]?.date}</span>
+      </div>
+    </div>
+  );
+};
+
+export default function ProgressPage() {
+  const allQuizResults = useQuery(api.quiz.getAllQuizResults);
+  const [selectedPeriod, setSelectedPeriod] = useState<
+    "all" | "week" | "month"
+  >("all");
+
+  // Calculate basic progress stats
+  const calculateProgress = () => {
+    if (!allQuizResults || allQuizResults.length === 0) {
+      return {
+        averageScore: 0,
+        averageAccuracy: 0,
+        averageTimePerQuestion: 0,
+        totalTime: 0,
+        recentQuizzes: [],
+        chartData: {
+          scores: [],
+          questionsAnswered: [],
+          accuracy: [],
+        },
+      };
+    }
+
+    const now = Date.now();
+    const oneWeekAgo = now - 7 * 24 * 60 * 60 * 1000;
+    const oneMonthAgo = now - 30 * 24 * 60 * 60 * 1000;
+
+    let filteredResults = allQuizResults;
+    if (selectedPeriod === "week") {
+      filteredResults = allQuizResults.filter(
+        (result) => new Date(result.date).getTime() > oneWeekAgo
+      );
+    } else if (selectedPeriod === "month") {
+      filteredResults = allQuizResults.filter(
+        (result) => new Date(result.date).getTime() > oneMonthAgo
+      );
+    }
+
+    const totalQuizzes = filteredResults.length;
+    const totalQuestions = filteredResults.reduce(
+      (sum, result) => sum + result.totalQuestions,
+      0
     );
+    const correctAnswers = filteredResults.reduce(
+      (sum, result) => sum + result.correctAnswers,
+      0
+    );
+    const averageAccuracy =
+      totalQuestions > 0 ? (correctAnswers / totalQuestions) * 100 : 0;
+    const averageScore =
+      totalQuizzes > 0
+        ? filteredResults.reduce((sum, result) => sum + result.score, 0) /
+          totalQuizzes
+        : 0;
+    const totalTime = filteredResults.reduce(
+      (sum, result) => sum + result.timeTaken,
+      0
+    );
+    const averageTimePerQuestion =
+      totalQuestions > 0 ? totalTime / totalQuestions : 0;
+
+    // Sort by date for chart data
+    const sortedResults = filteredResults.sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+
+    // Prepare chart data
+    const chartData = {
+      scores: sortedResults.map((result) => ({
+        date: new Date(result.date).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+        }),
+        value: result.score,
+      })),
+      questionsAnswered: sortedResults.map((result) => ({
+        date: new Date(result.date).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+        }),
+        value: result.totalQuestions,
+      })),
+      accuracy: sortedResults.map((result) => ({
+        date: new Date(result.date).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+        }),
+        value: result.accuracy,
+      })),
+    };
+
+    const recentQuizzes = filteredResults
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 5);
+
+    return {
+      averageScore,
+      averageAccuracy,
+      averageTimePerQuestion,
+      totalTime,
+      recentQuizzes,
+      chartData,
+    };
+  };
+
+  const progress = calculateProgress();
+
+  const formatTime = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
       {/* Header */}
       <header className="relative z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -344,7 +246,7 @@ export default function ProgressPage() {
             >
               <div className="flex items-center space-x-4">
                 <div className="relative">
-                  <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-2xl">
+                  <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
                     <TrendingUp className="w-7 h-7 text-white" />
                   </div>
                   <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-400 rounded-full animate-pulse"></div>
@@ -359,24 +261,19 @@ export default function ProgressPage() {
                 </div>
               </div>
             </Link>
-
             <div className="flex items-center space-x-4">
               <Link
-                href="/"
-                className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors"
+                href="/quiz"
+                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg hover:shadow-blue-500/25 transform hover:-translate-y-1 transition-all duration-200"
               >
-                <ArrowLeft className="w-5 h-5" />
-                <span>Back to Home</span>
+                Take Quiz
               </Link>
-              <button
-                onClick={() => {
-                  ProgressService.clearAllResults();
-                  setQuizHistory([]);
-                }}
-                className="px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white rounded-lg transition-all duration-200 text-sm shadow-lg"
+              <Link
+                href="/performance-insights"
+                className="bg-gradient-to-r from-green-600 to-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg hover:shadow-green-500/25 transform hover:-translate-y-1 transition-all duration-200"
               >
-                Clear Data
-              </button>
+                Performance Insights
+              </Link>
             </div>
           </div>
         </div>
@@ -384,357 +281,197 @@ export default function ProgressPage() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Page Header */}
+        {/* Page Title */}
         <div className="text-center mb-12">
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-4">
-            Your Progress
+          <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-10 leading-tight tracking-tight">
+            Progress Tracking
           </h1>
-          <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-            Track your investment banking knowledge growth with detailed
-            analytics and performance insights
+          <p className="text-lg md:text-xl lg:text-2xl text-gray-300 mb-16 leading-relaxed max-w-4xl mx-auto font-light">
+            Track your learning journey and see your improvement over time
           </p>
         </div>
 
         {/* Period Selector */}
         <div className="flex justify-center mb-8">
-          <div className="bg-gradient-to-br from-gray-800/50 to-gray-700/50 rounded-xl p-2 border border-gray-600/30 shadow-xl">
+          <div className="flex space-x-1 bg-gray-800/50 rounded-xl p-1">
             <button
-              onClick={() => setSelectedPeriod("week")}
+              onClick={() => setSelectedPeriod("all")}
               className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
-                selectedPeriod === "week"
-                  ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
-                  : "text-gray-300 hover:text-white hover:bg-gray-700/50"
+                selectedPeriod === "all"
+                  ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white"
+                  : "text-gray-300 hover:text-white"
               }`}
             >
-              This Week
+              All Time
             </button>
             <button
               onClick={() => setSelectedPeriod("month")}
               className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
                 selectedPeriod === "month"
-                  ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
-                  : "text-gray-300 hover:text-white hover:bg-gray-700/50"
+                  ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white"
+                  : "text-gray-300 hover:text-white"
               }`}
             >
               This Month
             </button>
             <button
-              onClick={() => setSelectedPeriod("all")}
+              onClick={() => setSelectedPeriod("week")}
               className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
-                selectedPeriod === "all"
-                  ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
-                  : "text-gray-300 hover:text-white hover:bg-gray-700/50"
+                selectedPeriod === "week"
+                  ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white"
+                  : "text-gray-300 hover:text-white"
               }`}
             >
-              All Time
+              This Week
             </button>
           </div>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-          <div className="bg-gradient-to-br from-blue-600/10 to-blue-700/10 border border-blue-500/20 rounded-2xl p-6 hover:border-blue-500/40 transition-all duration-300 group shadow-xl">
+        {/* Progress Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-gradient-to-r from-blue-600/10 to-purple-600/10 border border-blue-500/20 rounded-xl p-6">
             <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Trophy className="w-6 h-6 text-white" />
+              <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
+                <Target className="w-6 h-6 text-blue-400" />
               </div>
-              <span className="text-blue-400 text-sm font-medium">
-                Best Score
-              </span>
             </div>
-            <h3 className="text-3xl font-bold text-white mb-2">
-              {getBestScore()}
+            <h3 className="text-2xl font-bold text-white mb-2">
+              {progress.averageScore.toFixed(1)}
             </h3>
-            <p className="text-gray-400">Best Score (pts)</p>
+            <p className="text-gray-400">Average Score</p>
           </div>
 
-          <div className="bg-gradient-to-br from-green-600/10 to-green-700/10 border border-green-500/20 rounded-2xl p-6 hover:border-green-500/40 transition-all duration-300 group shadow-xl">
+          <div className="bg-gradient-to-r from-green-600/10 to-green-700/10 border border-green-500/20 rounded-xl p-6">
             <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                <TargetIcon className="w-6 h-6 text-white" />
+              <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center">
+                <CheckCircle className="w-6 h-6 text-green-400" />
               </div>
-              <span className="text-green-400 text-sm font-medium">
-                Average Score
-              </span>
             </div>
-            <h3 className="text-3xl font-bold text-white mb-2">
-              {getAverageScore()}
+            <h3 className="text-2xl font-bold text-white mb-2">
+              {progress.averageAccuracy.toFixed(1)}%
             </h3>
-            <p className="text-gray-400">Average Score (pts)</p>
+            <p className="text-gray-400">Average Accuracy</p>
           </div>
 
-          <div className="bg-gradient-to-br from-purple-600/10 to-purple-700/10 border border-purple-500/20 rounded-2xl p-6 hover:border-purple-500/40 transition-all duration-300 group shadow-xl">
+          <div className="bg-gradient-to-r from-yellow-600/10 to-yellow-700/10 border border-yellow-500/20 rounded-xl p-6">
             <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Calendar className="w-6 h-6 text-white" />
+              <div className="w-12 h-12 bg-yellow-500/20 rounded-xl flex items-center justify-center">
+                <Clock className="w-6 h-6 text-yellow-400" />
               </div>
-              <span className="text-purple-400 text-sm font-medium">
-                Total Quizzes
-              </span>
             </div>
-            <h3 className="text-3xl font-bold text-white mb-2">
-              {getTotalQuizzes()}
+            <h3 className="text-2xl font-bold text-white mb-2">
+              {progress.averageTimePerQuestion.toFixed(2)}s
             </h3>
-            <p className="text-gray-400">Quizzes Completed</p>
+            <p className="text-gray-400">Avg Time/Question</p>
           </div>
 
-          <div className="bg-gradient-to-br from-orange-600/10 to-orange-700/10 border border-orange-500/20 rounded-2xl p-6 hover:border-orange-500/40 transition-all duration-300 group shadow-xl">
+          <div className="bg-gradient-to-r from-purple-600/10 to-purple-700/10 border border-purple-500/20 rounded-xl p-6">
             <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Clock className="w-6 h-6 text-white" />
+              <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center">
+                <Activity className="w-6 h-6 text-purple-400" />
               </div>
-              <span className="text-orange-400 text-sm font-medium">
-                Avg Time
-              </span>
             </div>
-            <h3 className="text-3xl font-bold text-white mb-2">
-              {getAverageTimePerQuestion()}
+            <h3 className="text-2xl font-bold text-white mb-2">
+              {formatTime(progress.totalTime)}
             </h3>
-            <p className="text-gray-400">Seconds per Question</p>
+            <p className="text-gray-400">Total Study Time</p>
           </div>
         </div>
 
-        {/* Performance Chart */}
-        <div className="bg-gradient-to-br from-gray-800/50 to-gray-700/50 border border-gray-600/30 rounded-2xl p-8 mb-12 shadow-2xl">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-2xl font-bold text-white mb-2">
-                Performance Trend
-              </h2>
-              <p className="text-gray-400 text-sm">
-                {chartMetric === "questions"
-                  ? "Number of questions answered per quiz over time"
-                  : chartMetric === "score"
-                    ? "Score points per quiz over time"
-                    : "Accuracy percentage per quiz over time"}
-              </p>
-            </div>
-            <div className="flex space-x-2">
-              <button
-                onClick={() => setChartMetric("questions")}
-                className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                  chartMetric === "questions"
-                    ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
-                    : "bg-gray-700 text-gray-300 hover:text-white hover:bg-gray-600"
-                }`}
-              >
-                Questions
-              </button>
-              <button
-                onClick={() => setChartMetric("score")}
-                className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                  chartMetric === "score"
-                    ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
-                    : "bg-gray-700 text-gray-300 hover:text-white hover:bg-gray-600"
-                }`}
-              >
-                Score
-              </button>
-              <button
-                onClick={() => setChartMetric("accuracy")}
-                className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                  chartMetric === "accuracy"
-                    ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
-                    : "bg-gray-700 text-gray-300 hover:text-white hover:bg-gray-600"
-                }`}
-              >
-                Accuracy
-              </button>
+        {/* Progress Charts */}
+        {progress.chartData.scores.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
+              <BarChart3 className="w-6 h-6 mr-3 text-blue-400" />
+              Progress Over Time
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <LineChart
+                data={progress.chartData.scores}
+                title="Score Trend"
+                color="#3B82F6"
+              />
+              <LineChart
+                data={progress.chartData.questionsAnswered}
+                title="Questions Answered"
+                color="#10B981"
+              />
+              <LineChart
+                data={progress.chartData.accuracy}
+                title="Accuracy Trend"
+                color="#F59E0B"
+                showPercentage={true}
+              />
             </div>
           </div>
-          {renderLineChart()}
-        </div>
-
-        {/* Category Performance */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-          <div className="bg-gradient-to-br from-gray-800/50 to-gray-700/50 border border-gray-600/30 rounded-2xl p-6 shadow-xl">
-            <h3 className="text-xl font-bold text-white mb-6 flex items-center">
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center mr-3">
-                <Brain className="w-4 h-4 text-white" />
-              </div>
-              Performance by Category
-            </h3>
-            <div className="space-y-4">
-              {Object.entries(getCategoryPerformance())
-                .sort(([, a], [, b]) => b.percentage - a.percentage)
-                .map(([category, stats]) => (
-                  <div
-                    key={category}
-                    className="flex items-center justify-between p-4 bg-gray-700/30 rounded-xl"
-                  >
-                    <div>
-                      <span className="font-medium text-white">{category}</span>
-                      <span className="text-gray-400 ml-2">
-                        ({stats.correct}/{stats.total})
-                      </span>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <div className="w-24 bg-gray-600 rounded-full h-2">
-                        <div
-                          className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${stats.percentage}%` }}
-                        />
-                      </div>
-                      <span className="font-medium text-white w-12 text-right">
-                        {stats.percentage}%
-                      </span>
-                    </div>
-                  </div>
-                ))}
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-br from-gray-800/50 to-gray-700/50 border border-gray-600/30 rounded-2xl p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-white flex items-center">
-                <Target className="w-6 h-6 mr-3 text-green-400" />
-                Performance by Subcategory
-              </h3>
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => setSubcategoryView("best")}
-                  className={`px-3 py-1 rounded-lg text-sm font-medium transition-all ${
-                    subcategoryView === "best"
-                      ? "bg-green-600 text-white"
-                      : "bg-gray-700 text-gray-300 hover:text-white"
-                  }`}
-                >
-                  Top 10
-                </button>
-                <button
-                  onClick={() => setSubcategoryView("worst")}
-                  className={`px-3 py-1 rounded-lg text-sm font-medium transition-all ${
-                    subcategoryView === "worst"
-                      ? "bg-red-600 text-white"
-                      : "bg-gray-700 text-gray-300 hover:text-white"
-                  }`}
-                >
-                  Bottom 10
-                </button>
-              </div>
-            </div>
-            <div className="space-y-4">
-              {Object.entries(getSubcategoryPerformance())
-                .sort(([, a], [, b]) =>
-                  subcategoryView === "best"
-                    ? b.percentage - a.percentage
-                    : a.percentage - b.percentage
-                )
-                .slice(0, 10)
-                .map(([subcategory, stats]) => (
-                  <div
-                    key={subcategory}
-                    className="flex items-center justify-between p-4 bg-gray-700/30 rounded-xl"
-                  >
-                    <div>
-                      <span className="font-medium text-white">
-                        {subcategory}
-                      </span>
-                      <span className="text-gray-400 ml-2">
-                        ({stats.correct}/{stats.total})
-                      </span>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <div className="w-24 bg-gray-600 rounded-full h-2">
-                        <div
-                          className={`h-2 rounded-full transition-all duration-300 ${
-                            subcategoryView === "best"
-                              ? "bg-gradient-to-r from-green-500 to-emerald-500"
-                              : "bg-gradient-to-r from-red-500 to-orange-500"
-                          }`}
-                          style={{ width: `${stats.percentage}%` }}
-                        />
-                      </div>
-                      <span className="font-medium text-white w-12 text-right">
-                        {stats.percentage}%
-                      </span>
-                    </div>
-                  </div>
-                ))}
-            </div>
-          </div>
-        </div>
+        )}
 
         {/* Recent Quizzes */}
-        <div className="bg-gradient-to-br from-gray-800/50 to-gray-700/50 border border-gray-600/30 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-white mb-6 flex items-center">
-            <Zap className="w-6 h-6 mr-3 text-yellow-400" />
-            Recent Quiz Results
-          </h3>
-          {getFilteredHistory().length === 0 ? (
+        <div className="bg-gradient-to-br from-blue-600/10 to-purple-600/10 border border-blue-500/20 rounded-2xl p-8">
+          <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
+            <BarChart3 className="w-6 h-6 mr-3 text-blue-400" />
+            Recent Quizzes
+          </h2>
+
+          {progress.recentQuizzes.length === 0 ? (
             <div className="text-center py-12">
-              <Users className="w-16 h-16 text-gray-500 mx-auto mb-4" />
-              <p className="text-gray-400 text-lg mb-2">
-                No quizzes completed yet
-              </p>
-              <p className="text-gray-500">
-                Start your first quiz to see your progress here!
+              <div className="w-20 h-20 bg-gradient-to-r from-blue-500/20 to-purple-600/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <BarChart3 className="w-10 h-10 text-blue-400" />
+              </div>
+              <h3 className="text-xl font-semibold text-white mb-2">
+                No Quizzes Yet
+              </h3>
+              <p className="text-gray-400 mb-4">
+                Take your first quiz to start tracking your progress.
               </p>
               <Link
                 href="/quiz"
-                className="inline-block mt-4 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200"
+                className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-blue-500/25 transform hover:-translate-y-1 transition-all duration-200"
               >
                 Start Quiz
               </Link>
             </div>
           ) : (
             <div className="space-y-4">
-              {getFilteredHistory()
-                .slice(-5)
-                .reverse()
-                .map((result) => (
-                  <div
-                    key={result.id}
-                    className="flex items-center justify-between p-4 bg-gray-700/30 rounded-xl hover:bg-gray-700/50 transition-all duration-200"
-                  >
+              {progress.recentQuizzes.map((quiz, index) => (
+                <div
+                  key={index}
+                  className="bg-gradient-to-r from-gray-700/20 to-gray-800/20 border border-gray-600/30 rounded-xl p-6"
+                >
+                  <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
-                      <div
-                        className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                          result.accuracy >= 80
-                            ? "bg-green-500/20 border border-green-500/30"
-                            : result.accuracy >= 60
-                              ? "bg-yellow-500/20 border border-yellow-500/30"
-                              : "bg-red-500/20 border border-red-500/30"
-                        }`}
-                      >
-                        <span
-                          className={`text-lg font-bold ${
-                            result.accuracy >= 80
-                              ? "text-green-400"
-                              : result.accuracy >= 60
-                                ? "text-yellow-400"
-                                : "text-red-400"
-                          }`}
-                        >
-                          {result.accuracy}%
+                      <div className="w-10 h-10 bg-blue-500/20 rounded-full flex items-center justify-center">
+                        <span className="text-sm font-bold text-blue-300">
+                          {index + 1}
                         </span>
                       </div>
                       <div>
-                        <p className="font-medium text-white">
-                          {new Date(result.date).toLocaleDateString("en-US", {
-                            weekday: "long",
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                          })}
-                        </p>
+                        <h3 className="text-white font-semibold">
+                          Quiz #{quiz.totalQuestions} Questions
+                        </h3>
                         <p className="text-gray-400 text-sm">
-                          {result.totalQuestions} questions • {result.timeTaken}
-                          s
+                          {new Date(quiz.date).toLocaleDateString()} •{" "}
+                          {formatTime(quiz.timeTaken)}
                         </p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-2xl font-bold text-white">
-                        {result.score}
-                      </p>
-                      <p className="text-gray-400 text-sm">points</p>
+                      <div className="text-2xl font-bold text-green-400">
+                        {quiz.accuracy.toFixed(1)}%
+                      </div>
+                      <div className="text-sm text-gray-400">
+                        {quiz.correctAnswers}/{quiz.totalQuestions} correct
+                      </div>
                     </div>
                   </div>
-                ))}
+                </div>
+              ))}
             </div>
           )}
         </div>
+
+        {/* Bottom spacing to prevent abrupt ending */}
+        <div className="h-20"></div>
       </div>
     </div>
   );

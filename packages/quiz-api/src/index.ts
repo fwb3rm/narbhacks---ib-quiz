@@ -16,19 +16,37 @@ const openrouter = new OpenAI({
 
 export async function generateQuestion(requestedDifficulty?: string) {
   const topics = [
-    "accounting", "accounting", "accounting", "accounting", "accounting", "accounting",  // 6 = 30%
-    "valuation", "valuation", "valuation", "valuation", "valuation",                    // 5 = 25%
-    "LBO", "LBO", "LBO", "LBO",                                                          // 4 = 20%
-    "M&A", "M&A", "M&A", "M&A",                                                          // 4 = 20%
-    "capital markets", "capital markets",                                               // 2 = 10%
-    "corporate finance", "corporate finance",                                           // 2 = 10%
-    "technical modeling", "technical modeling" 
+    "Accounting",
+    "Accounting",
+    "Accounting",
+    "Accounting",
+    "Accounting",
+    "Accounting", // 6 = 30%
+    "Valuation",
+    "Valuation",
+    "Valuation",
+    "Valuation",
+    "Valuation", // 5 = 25%
+    "LBO",
+    "LBO",
+    "LBO",
+    "LBO", // 4 = 20%
+    "M&A",
+    "M&A",
+    "M&A",
+    "M&A", // 4 = 20%
+    "Capital Markets",
+    "Capital Markets", // 2 = 10%
+    "Corporate Finance",
+    "Corporate Finance", // 2 = 10%
+    "Technical Modeling",
+    "Technical Modeling",
   ];
   const randomTopic = topics[Math.floor(Math.random() * topics.length)];
 
   // Define specific subcategories for each main topic
   const subcategories = {
-    accounting: [
+    Accounting: [
       "income statement breakdown",
       "balance sheet breakdown",
       "cash flow statement breakdown",
@@ -46,7 +64,7 @@ export async function generateQuestion(requestedDifficulty?: string) {
       "interest expense",
       "accounting for debt issuance",
     ],
-    valuation: [
+    Valuation: [
       "DCF analysis",
       "comparable company analysis",
       "precedent transactions",
@@ -96,7 +114,7 @@ export async function generateQuestion(requestedDifficulty?: string) {
       "operational improvements",
       "roll-forward of debt",
     ],
-    "capital markets": [
+    "Capital Markets": [
       "IPO process overview",
       "bookbuilding process",
       "underwriting & syndication",
@@ -114,7 +132,7 @@ export async function generateQuestion(requestedDifficulty?: string) {
       "credit ratings impact",
       "investor relations strategy",
     ],
-    "corporate finance": [
+    "Corporate Finance": [
       "capital budgeting (NPV, IRR)",
       "internal rate of return (IRR)",
       "working capital management",
@@ -132,7 +150,7 @@ export async function generateQuestion(requestedDifficulty?: string) {
       "return on invested capital (ROIC)",
       "management reporting & KPIs",
     ],
-    "technical modeling": [
+    "Technical Modeling": [
       "modeling circular references",
       "building a debt schedule",
       "forecasting working capital",
@@ -432,14 +450,18 @@ Your goal is to help the user go from "I kinda get it" to "I could confidently e
 
     // Clean up the response to handle markdown-wrapped JSON
     let cleanedResponse = response.trim();
-    
+
     // Remove markdown code blocks if present
     if (cleanedResponse.startsWith("```json")) {
-      cleanedResponse = cleanedResponse.replace(/^```json\s*/, "").replace(/\s*```$/, "");
+      cleanedResponse = cleanedResponse
+        .replace(/^```json\s*/, "")
+        .replace(/\s*```$/, "");
     } else if (cleanedResponse.startsWith("```")) {
-      cleanedResponse = cleanedResponse.replace(/^```\s*/, "").replace(/\s*```$/, "");
+      cleanedResponse = cleanedResponse
+        .replace(/^```\s*/, "")
+        .replace(/\s*```$/, "");
     }
-    
+
     cleanedResponse = cleanedResponse.trim();
 
     // Try to parse the JSON response
@@ -549,22 +571,32 @@ app.post("/generate-lesson", async (req, res) => {
   try {
     const { subcategory, difficulty, prompt } = req.body;
 
-    console.log("Lesson generation request received:", { subcategory, difficulty });
+    console.log("Lesson generation request received:", {
+      subcategory,
+      difficulty,
+    });
 
     if (!subcategory || !difficulty || !prompt) {
-      console.error("Missing required fields:", { subcategory, difficulty, prompt });
+      console.error("Missing required fields:", {
+        subcategory,
+        difficulty,
+        prompt,
+      });
       return res.status(400).json({ error: "Missing required fields" });
     }
 
     // Map frontend difficulty levels to API difficulty levels
     const difficultyMapping: { [key: string]: string } = {
-      "beginner": "easy",
-      "intermediate": "medium", 
-      "advanced": "hard"
+      beginner: "easy",
+      intermediate: "medium",
+      advanced: "hard",
     };
-    
+
     const mappedDifficulty = difficultyMapping[difficulty] || difficulty;
-    console.log("Mapped difficulty:", { original: difficulty, mapped: mappedDifficulty });
+    console.log("Mapped difficulty:", {
+      original: difficulty,
+      mapped: mappedDifficulty,
+    });
 
     const lesson = await generateLesson(subcategory, mappedDifficulty, prompt);
     console.log("Lesson generated successfully");
@@ -579,7 +611,9 @@ app.post("/generate-targeted-practice", async (req, res) => {
   try {
     const { subcategory, prompt, wrongAnswers } = req.body;
 
-    console.log("Targeted practice generation request received:", { subcategory });
+    console.log("Targeted practice generation request received:", {
+      subcategory,
+    });
 
     if (!subcategory || !prompt) {
       console.error("Missing required fields:", { subcategory, prompt });
@@ -603,18 +637,25 @@ app.post("/generate-targeted-practice", async (req, res) => {
       throw new Error("No response from AI");
     }
 
-    console.log("AI Response received for targeted practice:", response.substring(0, 200) + "...");
+    console.log(
+      "AI Response received for targeted practice:",
+      response.substring(0, 200) + "..."
+    );
 
     // Clean up the response to handle markdown-wrapped JSON
     let cleanedResponse = response.trim();
-    
+
     // Remove markdown code blocks if present
     if (cleanedResponse.startsWith("```json")) {
-      cleanedResponse = cleanedResponse.replace(/^```json\s*/, "").replace(/\s*```$/, "");
+      cleanedResponse = cleanedResponse
+        .replace(/^```json\s*/, "")
+        .replace(/\s*```$/, "");
     } else if (cleanedResponse.startsWith("```")) {
-      cleanedResponse = cleanedResponse.replace(/^```\s*/, "").replace(/\s*```$/, "");
+      cleanedResponse = cleanedResponse
+        .replace(/^```\s*/, "")
+        .replace(/\s*```$/, "");
     }
-    
+
     cleanedResponse = cleanedResponse.trim();
 
     // Try to parse the JSON response
@@ -640,7 +681,9 @@ app.post("/generate-analysis", async (req, res) => {
   try {
     const { subcategory, performanceData, wrongAnswers, patterns } = req.body;
 
-    console.log("Detailed analysis generation request received:", { subcategory });
+    console.log("Detailed analysis generation request received:", {
+      subcategory,
+    });
     console.log("Request body:", JSON.stringify(req.body, null, 2));
 
     if (!subcategory) {
@@ -652,12 +695,12 @@ app.post("/generate-analysis", async (req, res) => {
     const safePerformanceData = performanceData || {};
     const safeWrongAnswers = Array.isArray(wrongAnswers) ? wrongAnswers : [];
     const safePatterns = patterns || {};
-    
+
     console.log("Sanitized data:", {
       subcategory,
       performanceData: safePerformanceData,
       wrongAnswersCount: safeWrongAnswers.length,
-      patterns: safePatterns
+      patterns: safePatterns,
     });
 
     const analysisPrompt = `Analyze the performance data for "${subcategory}" and provide detailed insights.
@@ -667,18 +710,24 @@ PERFORMANCE DATA:
 - Total questions: ${safePerformanceData?.totalQuestions || 0}
 - Wrong answers: ${safePatterns?.totalWrongAnswers || 0}
 - Average time on wrong answers: ${safePatterns?.averageTimeOnWrongAnswers || 0} seconds
-- Improvement trend: ${safePatterns?.improvementTrend || 'stable'}
+- Improvement trend: ${safePatterns?.improvementTrend || "stable"}
 
 WRONG ANSWER PATTERNS:
-${safePatterns?.commonMistakes?.map((mistake: string, index: number) => `${index + 1}. ${mistake}`).join('\n') || 'No patterns detected'}
+${safePatterns?.commonMistakes?.map((mistake: string, index: number) => `${index + 1}. ${mistake}`).join("\n") || "No patterns detected"}
 
 RECENT WRONG ANSWERS:
-${safeWrongAnswers?.slice(0, 5).map((wrong: any, index: number) => 
-  `${index + 1}. Question: "${(wrong.questionText || '').substring(0, 100)}..."
-     Your answer: "${wrong.userAnswer || 'N/A'}"
-     Correct answer: "${wrong.correctAnswer || 'N/A'}"
+${
+  safeWrongAnswers
+    ?.slice(0, 5)
+    .map(
+      (wrong: any, index: number) =>
+        `${index + 1}. Question: "${(wrong.questionText || "").substring(0, 100)}..."
+     Your answer: "${wrong.userAnswer || "N/A"}"
+     Correct answer: "${wrong.correctAnswer || "N/A"}"
      Time taken: ${wrong.timeTaken || 0} seconds`
-).join('\n') || 'No recent wrong answers'}
+    )
+    .join("\n") || "No recent wrong answers"
+}
 
 Provide a comprehensive analysis in the following JSON format:
 {
@@ -719,18 +768,25 @@ Focus on providing actionable, specific insights based on the actual performance
       throw new Error("No response from AI");
     }
 
-    console.log("AI Response received for analysis:", response.substring(0, 200) + "...");
+    console.log(
+      "AI Response received for analysis:",
+      response.substring(0, 200) + "..."
+    );
 
     // Clean up the response to handle markdown-wrapped JSON
     let cleanedResponse = response.trim();
-    
+
     // Remove markdown code blocks if present
     if (cleanedResponse.startsWith("```json")) {
-      cleanedResponse = cleanedResponse.replace(/^```json\s*/, "").replace(/\s*```$/, "");
+      cleanedResponse = cleanedResponse
+        .replace(/^```json\s*/, "")
+        .replace(/\s*```$/, "");
     } else if (cleanedResponse.startsWith("```")) {
-      cleanedResponse = cleanedResponse.replace(/^```\s*/, "").replace(/\s*```$/, "");
+      cleanedResponse = cleanedResponse
+        .replace(/^```\s*/, "")
+        .replace(/\s*```$/, "");
     }
-    
+
     cleanedResponse = cleanedResponse.trim();
 
     // Try to parse the JSON response
@@ -741,27 +797,27 @@ Focus on providing actionable, specific insights based on the actual performance
       console.error("Failed to parse AI response:", parseError);
       console.error("Raw response:", response);
       console.error("Cleaned response:", cleanedResponse);
-      
+
       // Provide a fallback response if AI fails
       analysisData = {
         summary: `Based on your performance in ${subcategory}, you have an accuracy of ${safePerformanceData?.currentAccuracy || 0}% with ${safePerformanceData?.totalQuestions || 0} questions attempted.`,
         keyWeaknesses: [
           "Need more practice in this area",
           "Focus on understanding core concepts",
-          "Review fundamental principles"
+          "Review fundamental principles",
         ],
         improvementStrategies: [
           "Practice more questions in this topic",
           "Review the basic concepts thoroughly",
-          "Focus on understanding the underlying principles"
+          "Focus on understanding the underlying principles",
         ],
         practiceFocusAreas: [
           "Core concepts",
-          "Basic principles", 
-          "Fundamental understanding"
-        ]
+          "Basic principles",
+          "Fundamental understanding",
+        ],
       };
-      
+
       console.log("Using fallback analysis data");
     }
 
@@ -770,12 +826,12 @@ Focus on providing actionable, specific insights based on the actual performance
   } catch (error) {
     console.error("Error generating detailed analysis:", error);
     console.error("Error details:", {
-      message: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined
+      message: error instanceof Error ? error.message : "Unknown error",
+      stack: error instanceof Error ? error.stack : undefined,
     });
-    res.status(500).json({ 
+    res.status(500).json({
       error: "Failed to generate detailed analysis",
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : "Unknown error",
     });
   }
 });

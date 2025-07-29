@@ -2,6 +2,7 @@
 
 import {
   ArrowRight,
+  BarChart3,
   BookOpen,
   Brain,
   HelpCircle,
@@ -31,25 +32,30 @@ export default function Home() {
   useEffect(() => {
     let currentIndex = 0;
 
-    const interval = setInterval(() => {
-      console.log("Animation triggered, current index:", currentIndex);
-      setIsAnimating(true);
+    // Start the animation after a short delay
+    const startAnimation = setTimeout(() => {
+      const interval = setInterval(() => {
+        console.log("Animation triggered, current index:", currentIndex);
+        setIsAnimating(true);
 
-      setTimeout(() => {
-        currentIndex = (currentIndex + 1) % topics.length;
-        console.log("New index:", currentIndex);
-        setCurrentTextIndex(currentIndex);
-        setIsAnimating(false);
+        setTimeout(() => {
+          currentIndex = (currentIndex + 1) % topics.length;
+          console.log("New index:", currentIndex);
+          setCurrentTextIndex(currentIndex);
+          setIsAnimating(false);
 
-        // Stop animation after one complete cycle (when we reach "Investment Banking" again)
-        if (currentIndex === topics.length - 1) {
-          clearInterval(interval);
-        }
-      }, 250);
-    }, 2000);
+          // Stop animation after one complete cycle (when we reach "Investment Banking" again)
+          if (currentIndex === topics.length - 1) {
+            clearInterval(interval);
+          }
+        }, 250);
+      }, 2000);
 
-    return () => clearInterval(interval);
-  }, []);
+      return () => clearInterval(interval);
+    }, 500);
+
+    return () => clearTimeout(startAnimation);
+  }, [topics.length]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
@@ -80,27 +86,34 @@ export default function Home() {
                 href="/progress"
                 className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors duration-200"
               >
-                <TrendingUp className="w-5 h-5" />
-                <span className="font-medium text-base">Progress</span>
+                <TrendingUp className="w-6 h-6" />
+                <span className="font-semibold text-base">Progress</span>
               </Link>
               <Link
                 href="/lessons"
                 className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors duration-200"
               >
-                <BookOpen className="w-5 h-5" />
-                <span className="font-medium text-base">Lessons</span>
+                <BookOpen className="w-6 h-6" />
+                <span className="font-semibold text-base">Lessons</span>
+              </Link>
+              <Link
+                href="/performance-insights"
+                className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors duration-200"
+              >
+                <BarChart3 className="w-6 h-6" />
+                <span className="font-semibold text-base">Insights</span>
               </Link>
               <button
                 type="button"
                 onClick={() => setIsGuideOpen(true)}
                 className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors duration-200"
               >
-                <HelpCircle className="w-5 h-5" />
-                <span className="font-medium text-base">Guide</span>
+                <HelpCircle className="w-6 h-6" />
+                <span className="font-semibold text-base">Guide</span>
               </button>
               <Link
                 href="/quiz"
-                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2.5 rounded-lg font-semibold text-sm hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 rounded-lg font-semibold text-base hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl"
               >
                 Start Quiz
               </Link>
@@ -136,9 +149,9 @@ export default function Home() {
 
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-10 leading-tight tracking-tight">
               <div className="flex items-center justify-center w-full">
-                <div className="flex items-center ml-72">
+                <div className="flex items-center">
                   <span className="inline-block">Master</span>
-                  <div className="inline-block relative h-20 w-[1000px] overflow-hidden ml-6">
+                  <div className="inline-block relative h-20 w-[700px] overflow-hidden ml-4">
                     <div
                       className="absolute top-0 left-0 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent"
                       style={{
@@ -170,7 +183,7 @@ export default function Home() {
                         fontWeight: "inherit",
                         lineHeight: "1.2",
                         whiteSpace: "nowrap",
-                        top: "4px",
+                        top: "6px",
                         width: "100%",
                         textAlign: "left",
                       }}
@@ -232,7 +245,7 @@ export default function Home() {
               </h3>
               <p className="text-gray-400 leading-relaxed text-base font-light">
                 Dynamic questions that adapt to your skill level, ensuring
-                you're always challenged and learning effectively with
+                you&apos;re always challenged and learning effectively with
                 personalized difficulty progression.
               </p>
             </div>
@@ -296,9 +309,9 @@ export default function Home() {
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center space-x-3 mb-6 md:mb-0">
               <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center shadow-lg">
-                <Brain className="w-5 h-5 text-white" />
+                <TrendingUp className="w-5 h-5 text-white" />
               </div>
-              <span className="text-white font-bold text-lg tracking-tight">
+              <span className="text-white font-bold text-base tracking-tight">
                 InvestIQ
               </span>
             </div>

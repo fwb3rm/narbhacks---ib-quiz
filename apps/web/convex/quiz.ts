@@ -1,6 +1,6 @@
-import { mutation, query, action, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
+import { action, internalMutation, mutation, query } from "./_generated/server";
 
 // Save quiz result
 export const saveQuizResult = mutation({
@@ -11,18 +11,20 @@ export const saveQuizResult = mutation({
     correctAnswers: v.number(),
     accuracy: v.number(),
     timeTaken: v.number(),
-    questions: v.array(v.object({
-      question: v.string(),
-      userAnswer: v.string(),
-      correctAnswer: v.string(),
-      explanation: v.string(),
-      isCorrect: v.boolean(),
-      category: v.string(),
-      subcategory: v.optional(v.string()),
-      difficulty: v.string(),
-      points: v.number(),
-      timeTaken: v.number(),
-    })),
+    questions: v.array(
+      v.object({
+        question: v.string(),
+        userAnswer: v.string(),
+        correctAnswer: v.string(),
+        explanation: v.string(),
+        isCorrect: v.boolean(),
+        category: v.string(),
+        subcategory: v.optional(v.string()),
+        difficulty: v.string(),
+        points: v.number(),
+        timeTaken: v.number(),
+      })
+    ),
   },
   handler: async (ctx, args) => {
     return await ctx.db.insert("quizResults", {
@@ -55,32 +57,6 @@ export const getQuizResultsByUser = query({
   },
 });
 
-// Test action to check if OpenRouter is working
-export const testOpenRouter = action({
-  args: {},
-  handler: async (ctx, args) => {
-    try {
-      console.log("Testing OpenRouter API...");
-      const openai = new (await import("openai")).default({
-        apiKey: process.env.OPENROUTER_API_KEY,
-        baseURL: "https://openrouter.ai/api/v1",
-      });
-
-      const completion = await openai.chat.completions.create({
-        model: "google/gemini-2.5-flash",
-        messages: [{ role: "user", content: "Say hello" }],
-        max_tokens: 10,
-      });
-
-      console.log("OpenRouter test successful:", completion.choices[0].message.content);
-      return { success: true, message: completion.choices[0].message.content };
-    } catch (error) {
-      console.error("OpenRouter test failed:", error);
-      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
-    }
-  },
-});
-
 // Pre-generated questions as fallback
 const FALLBACK_QUESTIONS = [
   {
@@ -92,7 +68,8 @@ const FALLBACK_QUESTIONS = [
       "To determine a company's market share",
     ],
     answer: "To compare a company's stock price to its earnings",
-    explanation: "The P/E ratio compares a company's stock price to its earnings per share, helping investors assess valuation.",
+    explanation:
+      "The P/E ratio compares a company's stock price to its earnings per share, helping investors assess valuation.",
     category: "Investment Banking",
     subcategory: "Valuation",
     difficulty: "medium",
@@ -108,7 +85,8 @@ const FALLBACK_QUESTIONS = [
       "Customer deposits",
     ],
     answer: "Debt financing",
-    explanation: "LBOs are typically funded through debt, with the acquired company's cash flow used to pay it down.",
+    explanation:
+      "LBOs are typically funded through debt, with the acquired company's cash flow used to pay it down.",
     category: "Investment Banking",
     subcategory: "LBO",
     difficulty: "medium",
@@ -123,8 +101,10 @@ const FALLBACK_QUESTIONS = [
       "To calculate the synergies",
       "To approve the transaction",
     ],
-    answer: "To provide an independent assessment of whether a deal is fair to shareholders",
-    explanation: "A fairness opinion ensures shareholders are getting reasonable value in a transaction.",
+    answer:
+      "To provide an independent assessment of whether a deal is fair to shareholders",
+    explanation:
+      "A fairness opinion ensures shareholders are getting reasonable value in a transaction.",
     category: "Investment Banking",
     subcategory: "M&A",
     difficulty: "medium",
@@ -132,7 +112,8 @@ const FALLBACK_QUESTIONS = [
     type: "pre-generated" as const,
   },
   {
-    question: "What happens to working capital if a company pays off $75 of accounts payable?",
+    question:
+      "What happens to working capital if a company pays off $75 of accounts payable?",
     options: [
       "Working capital increases by $75",
       "Working capital decreases by $75",
@@ -140,7 +121,8 @@ const FALLBACK_QUESTIONS = [
       "Working capital increases by $150",
     ],
     answer: "Working capital remains unchanged",
-    explanation: "Both current assets (cash) and current liabilities (accounts payable) decrease by $75, so working capital stays the same.",
+    explanation:
+      "Both current assets (cash) and current liabilities (accounts payable) decrease by $75, so working capital stays the same.",
     category: "Investment Banking",
     subcategory: "Accounting",
     difficulty: "medium",
@@ -156,7 +138,8 @@ const FALLBACK_QUESTIONS = [
       "Net income increases by $25",
     ],
     answer: "Net income decreases by $50",
-    explanation: "Depreciation is an expense that reduces net income on the income statement.",
+    explanation:
+      "Depreciation is an expense that reduces net income on the income statement.",
     category: "Investment Banking",
     subcategory: "Accounting",
     difficulty: "easy",
@@ -171,8 +154,10 @@ const FALLBACK_QUESTIONS = [
       "To calculate a company's book value",
       "To assess a company's historical performance",
     ],
-    answer: "To estimate a company's intrinsic value based on future cash flows",
-    explanation: "DCF valuation estimates a company's intrinsic value by discounting its projected future cash flows to present value.",
+    answer:
+      "To estimate a company's intrinsic value based on future cash flows",
+    explanation:
+      "DCF valuation estimates a company's intrinsic value by discounting its projected future cash flows to present value.",
     category: "Investment Banking",
     subcategory: "Valuation",
     difficulty: "hard",
@@ -187,8 +172,10 @@ const FALLBACK_QUESTIONS = [
       "It's more widely used",
       "It's more accurate for all companies",
     ],
-    answer: "It eliminates the impact of different capital structures and accounting policies",
-    explanation: "EV/EBITDA is capital structure neutral and less affected by accounting differences, making it better for comparing companies.",
+    answer:
+      "It eliminates the impact of different capital structures and accounting policies",
+    explanation:
+      "EV/EBITDA is capital structure neutral and less affected by accounting differences, making it better for comparing companies.",
     category: "Investment Banking",
     subcategory: "Valuation",
     difficulty: "hard",
@@ -201,12 +188,15 @@ const FALLBACK_QUESTIONS = [
 export const generateQuestion = action({
   args: { difficulty: v.string() },
   handler: async (ctx, args) => {
-    console.log("Starting AI question generation for difficulty:", args.difficulty);
-    
-    try {
-      // For now, just return a hardcoded question to test the flow
-      // We'll add AI generation back once we confirm the basic flow works
-      const hardcodedQuestion = {
+    console.log(
+      "Starting question generation for difficulty:",
+      args.difficulty
+    );
+
+    // For now, return a random pre-generated question since Convex can't call localhost
+    // TODO: Set up a proper external API endpoint for production
+    const fallbackQuestions = [
+      {
         question: "What is the primary purpose of a P/E ratio in valuation?",
         options: [
           "To measure a company's debt levels",
@@ -215,40 +205,58 @@ export const generateQuestion = action({
           "To determine a company's market share",
         ],
         answer: "To compare a company's stock price to its earnings",
-        explanation: "The P/E ratio compares a company's stock price to its earnings per share, helping investors assess valuation.",
-        category: "Investment Banking",
-        subcategory: "Valuation",
+        explanation:
+          "The P/E ratio compares a company's stock price to its earnings per share, helping investors assess valuation.",
+        category: "Valuation",
+        subcategory: "Multiples Analysis",
         difficulty: args.difficulty,
         points: 100,
         type: "pre-generated" as const,
-      };
-      
-      console.log("Returning hardcoded question for testing");
-      return hardcodedQuestion;
-    } catch (error) {
-      console.error("Failed to generate question:", error);
-      
-      // Emergency fallback
-      const emergencyQuestion = {
-        question: "What is EBITDA?",
+      },
+      {
+        question: "In an LBO, what is the primary source of financing?",
         options: [
-          "Earnings Before Interest, Taxes, Depreciation, and Amortization",
-          "Earnings Before Interest and Taxes",
-          "Earnings Before Depreciation and Amortization",
-          "Earnings Before Taxes",
+          "Equity from the acquiring company",
+          "Debt financing",
+          "Government grants",
+          "Customer deposits",
         ],
-        answer: "Earnings Before Interest, Taxes, Depreciation, and Amortization",
-        explanation: "EBITDA is a measure of a company's operating performance.",
-        category: "Investment Banking",
-        subcategory: "Accounting",
+        answer: "Debt financing",
+        explanation:
+          "LBOs are typically funded through debt, with the acquired company's cash flow used to pay it down.",
+        category: "LBO",
+        subcategory: "Capital Structure",
         difficulty: args.difficulty,
         points: 100,
         type: "pre-generated" as const,
-      };
-      
-      console.log("Using emergency fallback question");
-      return emergencyQuestion;
-    }
+      },
+      {
+        question: "What is the main purpose of a fairness opinion in M&A?",
+        options: [
+          "To determine the final purchase price",
+          "To provide an independent assessment of whether a deal is fair to shareholders",
+          "To calculate the synergies",
+          "To approve the transaction",
+        ],
+        answer:
+          "To provide an independent assessment of whether a deal is fair to shareholders",
+        explanation:
+          "A fairness opinion ensures shareholders are getting reasonable value in a transaction.",
+        category: "M&A",
+        subcategory: "Deal Process",
+        difficulty: args.difficulty,
+        points: 100,
+        type: "pre-generated" as const,
+      },
+    ];
+
+    const randomIndex = Math.floor(Math.random() * fallbackQuestions.length);
+    const fallbackQuestion = fallbackQuestions[randomIndex];
+
+    console.log(
+      "Using pre-generated question (AI integration requires external API)"
+    );
+    return fallbackQuestion;
   },
 });
 
@@ -279,13 +287,13 @@ export const getRandomQuestion = query({
       .query("questions")
       .withIndex("by_difficulty", (q) => q.eq("difficulty", args.difficulty))
       .collect();
-    
+
     if (questions.length === 0) {
       return null;
     }
-    
+
     // Return a random question
     const randomIndex = Math.floor(Math.random() * questions.length);
     return questions[randomIndex];
   },
-}); 
+});

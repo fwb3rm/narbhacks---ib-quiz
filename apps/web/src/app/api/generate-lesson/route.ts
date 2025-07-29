@@ -4,7 +4,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    const response = await fetch("http://localhost:3003/generate-analysis", {
+    const response = await fetch("http://localhost:3003/generate-lesson", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -19,9 +19,9 @@ export async function POST(request: NextRequest) {
     const data = await response.json();
     return NextResponse.json(data);
   } catch (error) {
-    console.error("Error generating analysis:", error);
+    console.error("Error generating lesson:", error);
     return NextResponse.json(
-      { error: "Failed to generate analysis" },
+      { error: "Failed to generate lesson" },
       { status: 500 }
     );
   }

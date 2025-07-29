@@ -1,11 +1,11 @@
 "use client";
 
+import { useAction, useMutation } from "convex/react";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { useMutation } from "convex/react";
-import { api } from "../../convex/_generated/api";
 import { ProgressService } from "@/lib/progress";
+import { api } from "../../convex/_generated/api";
 
 interface QuestionType {
   question: string;
@@ -21,7 +21,7 @@ interface QuestionType {
 
 export default function Quiz() {
   const saveQuizResult = useMutation(api.quiz.saveQuizResult);
-  // Quiz component updated to use hardcoded questions - NO CONVEX CALLS - VERCEL FIX - FORCE NEW DEPLOYMENT
+  const generateQuestion = useAction(api.quiz.generateQuestion);
   const [question, setQuestion] = useState<QuestionType | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
@@ -35,6 +35,7 @@ export default function Quiz() {
   const [timerActive, setTimerActive] = useState(true);
   const [showResults, setShowResults] = useState(false);
   const [showQuestionReview, setShowQuestionReview] = useState(false);
+  const [questionStartTime, setQuestionStartTime] = useState<number>(120); // Track when current question started
   const [_questionType, setQuestionType] = useState<
     "pre-generated" | "ai-generated"
   >("pre-generated");
@@ -102,66 +103,28 @@ export default function Quiz() {
     try {
       const nextDifficulty = getNextDifficulty();
       console.log(`Requesting question with difficulty: ${nextDifficulty}`);
-      console.log("USING HARDCODED QUESTIONS - NO CONVEX CALLS");
+
+      // Call the AI API directly through the web app's API route
+      const response = await fetch(
+        `/api/generate-question?difficulty=${nextDifficulty}`
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
       
-      // Use hardcoded questions for now
-      const questions = [
-        {
-          question: "What is the primary purpose of a P/E ratio in valuation?",
-          options: [
-            "To measure a company's debt levels",
-            "To compare a company's stock price to its earnings",
-            "To calculate a company's cash flow",
-            "To determine a company's market share",
-          ],
-          answer: "To compare a company's stock price to its earnings",
-          explanation: "The P/E ratio compares a company's stock price to its earnings per share, helping investors assess valuation.",
-          category: "Investment Banking",
-          subcategory: "Valuation",
-          difficulty: nextDifficulty,
-          points: 100,
-          type: "pre-generated" as const,
-        },
-        {
-          question: "What is EBITDA?",
-          options: [
-            "Earnings Before Interest, Taxes, Depreciation, and Amortization",
-            "Earnings Before Interest and Taxes",
-            "Earnings Before Depreciation and Amortization",
-            "Earnings Before Taxes",
-          ],
-          answer: "Earnings Before Interest, Taxes, Depreciation, and Amortization",
-          explanation: "EBITDA is a measure of a company's operating performance.",
-          category: "Investment Banking",
-          subcategory: "Accounting",
-          difficulty: nextDifficulty,
-          points: 100,
-          type: "pre-generated" as const,
-        },
-        {
-          question: "What is the main purpose of a DCF valuation?",
-          options: [
-            "To determine a company's current market value",
-            "To estimate a company's intrinsic value based on future cash flows",
-            "To calculate a company's book value",
-            "To assess a company's historical performance",
-          ],
-          answer: "To estimate a company's intrinsic value based on future cash flows",
-          explanation: "DCF valuation estimates a company's intrinsic value by discounting its projected future cash flows to present value.",
-          category: "Investment Banking",
-          subcategory: "Valuation",
-          difficulty: nextDifficulty,
-          points: 150,
-          type: "pre-generated" as const,
-        }
-      ];
-      
-      // Pick a random question
-      const randomIndex = Math.floor(Math.random() * questions.length);
-      const data = questions[randomIndex];
-      
-      console.log(`Selected question: ${data.question}`);
-      setQuestion(data);
+      // Validate that the response has the required fields
+      if (!data.question || !data.options || !data.answer || !data.explanation) {
+        throw new Error("Invalid question data received from AI API");
+      }
+
+      console.log(`Received AI question: ${data.question}`);
+      setQuestion({
+        ...data,
+        difficulty: data.difficulty as "easy" | "medium" | "hard",
+      });
       setSelected(null);
       setFeedback("");
       setIsCorrect(null);
@@ -169,21 +132,50 @@ export default function Quiz() {
       setShowNotification(false);
 
       // Use the actual question type from the API response
-      setQuestionType(data.type || "pre-generated");
+      setQuestionType(data.type || "ai-generated");
+      // Set the start time for this question
+      setQuestionStartTime(timeLeft);
     } catch (error) {
-      console.error("Failed to fetch question:", error);
-      setFeedback("Failed to load question. Please try again.");
-      setShowNotification(true);
-      setTimeout(() => {
+      console.error("Failed to fetch AI question:", error);
+
+      // Fallback to Convex pre-generated questions
+      try {
+        console.log("Falling back to pre-generated questions");
+        const fallbackDifficulty = getNextDifficulty();
+        const data = await generateQuestion({ difficulty: fallbackDifficulty });
+
+        setQuestion({
+          ...data,
+          difficulty: data.difficulty as "easy" | "medium" | "hard",
+        });
+        setSelected(null);
+        setFeedback("");
+        setIsCorrect(null);
+        setHasAnswered(false);
         setShowNotification(false);
-      }, 3000);
+        setQuestionType(data.type || "pre-generated");
+        // Set the start time for this question
+        setQuestionStartTime(timeLeft);
+      } catch (fallbackError) {
+        console.error("Failed to fetch fallback question:", fallbackError);
+        setFeedback("Failed to load question. Please try again.");
+        setShowNotification(true);
+        setTimeout(() => {
+          setShowNotification(false);
+        }, 3000);
+      }
     } finally {
       setIsLoading(false);
     }
-  }, [getNextDifficulty]);
+  }, [getNextDifficulty, generateQuestion, timeLeft]);
 
   useEffect(() => {
-    fetchQuestion();
+    // Add a small delay to ensure proper initialization
+    const timer = setTimeout(() => {
+      fetchQuestion();
+    }, 100);
+    
+    return () => clearTimeout(timer);
   }, []); // Only run once on mount
 
   // Timer effect
@@ -220,7 +212,7 @@ export default function Quiz() {
                 subcategory: question.subcategory,
                 difficulty: questionDifficulty,
                 points: question.points || 100,
-                timeTaken: 120 - prev,
+                timeTaken: questionStartTime - prev,
               },
             ]);
 
@@ -256,7 +248,7 @@ export default function Quiz() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [timerActive, timeLeft, hasAnswered, question]);
+  }, [timerActive, timeLeft, hasAnswered, question, questionStartTime]);
 
   // Start timer only once at the beginning - no resets
   useEffect(() => {
@@ -287,7 +279,7 @@ export default function Quiz() {
         timeTaken: totalTimeTaken,
         questions: answeredQuestions,
       });
-      
+
       // Also save to localStorage for backward compatibility
       ProgressService.saveQuizResult({
         date: new Date().toISOString(),
@@ -335,7 +327,7 @@ export default function Quiz() {
           subcategory: question.subcategory,
           difficulty: questionDifficulty,
           points: question.points || 100,
-          timeTaken: 120 - timeLeft,
+          timeTaken: questionStartTime - timeLeft,
         },
       ]);
 
@@ -366,9 +358,9 @@ export default function Quiz() {
   const handleNextQuestion = useCallback(async () => {
     if (isLoading) return;
 
-    console.log('Current question number before increment:', questionNumber);
+    console.log("Current question number before increment:", questionNumber);
     const newQuestionNumber = questionNumber + 1;
-    console.log('New question number:', newQuestionNumber);
+    console.log("New question number:", newQuestionNumber);
     setQuestionNumber(newQuestionNumber);
     await fetchQuestion();
   }, [isLoading, fetchQuestion, questionNumber]);
@@ -390,9 +382,9 @@ export default function Quiz() {
       // Handle Enter key for next question (only if already answered and not loading)
       if (key === "Enter" && hasAnswered && !isLoading) {
         event.preventDefault();
-        console.log('Enter key pressed for next question!');
-        console.log('hasAnswered:', hasAnswered);
-        console.log('isLoading:', isLoading);
+        console.log("Enter key pressed for next question!");
+        console.log("hasAnswered:", hasAnswered);
+        console.log("isLoading:", isLoading);
         handleNextQuestion();
       }
     };
@@ -420,7 +412,14 @@ export default function Quiz() {
   }
 
   // Debug logging
-  console.log('Render - questionNumber:', questionNumber, 'hasAnswered:', hasAnswered, 'isLoading:', isLoading);
+  console.log(
+    "Render - questionNumber:",
+    questionNumber,
+    "hasAnswered:",
+    hasAnswered,
+    "isLoading:",
+    isLoading
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 py-8 px-4">
@@ -604,9 +603,9 @@ export default function Quiz() {
             <div className="mt-8 flex justify-center">
               <button
                 onClick={() => {
-                  console.log('Next Question button clicked!');
-                  console.log('hasAnswered:', hasAnswered);
-                  console.log('isLoading:', isLoading);
+                  console.log("Next Question button clicked!");
+                  console.log("hasAnswered:", hasAnswered);
+                  console.log("isLoading:", isLoading);
                   handleNextQuestion();
                 }}
                 disabled={isLoading}
@@ -661,7 +660,7 @@ export default function Quiz() {
         {/* Time's Up Notification */}
         {timeLeft === 0 && !hasAnswered && (
           <div className="fixed top-4 right-4 bg-gradient-to-r from-red-600 to-red-700 text-white px-6 py-3 rounded-xl shadow-2xl animate-bounce border border-red-500/50">
-            ⏰ Time's up! Answer automatically selected.
+            ⏰ Time&apos;s up! Answer automatically selected.
           </div>
         )}
 
@@ -703,7 +702,7 @@ export default function Quiz() {
                           100
                       );
                       const totalQuestions = answeredQuestions.length;
-                      
+
                       // Grade based on accuracy and number of questions answered
                       if (totalQuestions >= 5) {
                         if (accuracy >= 90) return "A";
@@ -796,7 +795,13 @@ export default function Quiz() {
                         >
                           <div>
                             <span className="font-medium text-gray-800">
-                              {category?.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                              {category
+                                ?.split(" ")
+                                .map(
+                                  (word) =>
+                                    word.charAt(0).toUpperCase() + word.slice(1)
+                                )
+                                .join(" ")}
                             </span>
                             <span className="text-gray-600 ml-2">
                               ({correct}/{categoryQuestions.length})
@@ -894,11 +899,24 @@ export default function Quiz() {
                           </h4>
                           <div className="flex flex-wrap gap-2 text-sm">
                             <span className="px-2 py-1 bg-blue-100 text-blue-800 border border-blue-300 rounded">
-                              {q.category?.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                              {q.category
+                                ?.split(" ")
+                                .map(
+                                  (word) =>
+                                    word.charAt(0).toUpperCase() + word.slice(1)
+                                )
+                                .join(" ")}
                             </span>
                             {q.subcategory && (
                               <span className="px-2 py-1 bg-green-100 text-green-800 border border-green-300 rounded">
-                                {q.subcategory.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                                {q.subcategory
+                                  .split(" ")
+                                  .map(
+                                    (word) =>
+                                      word.charAt(0).toUpperCase() +
+                                      word.slice(1)
+                                  )
+                                  .join(" ")}
                               </span>
                             )}
                             <span className="px-2 py-1 bg-gray-100 text-gray-800 border border-gray-300 rounded">
