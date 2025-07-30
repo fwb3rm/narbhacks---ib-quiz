@@ -114,7 +114,6 @@ const ALL_SUBCATEGORIES = {
   ],
   "corporate finance": [
     "Capital Budgeting (NPV, IRR)",
-    "Internal Rate of Return (IRR)",
     "Working Capital Management",
     "Dividend Policy Decisions",
     "Capital Structure Optimization",
@@ -853,7 +852,7 @@ export default function LessonsPage() {
                           )}
                           {subcategories.map((topic) => (
                             <button
-                              key={topic}
+                              key={`${category}-${topic}`}
                               onClick={() => handleGenerateLesson(topic)}
                               disabled={isGenerating}
                               className={`w-full text-left p-4 rounded-xl border transition-all duration-200 ${
@@ -966,13 +965,24 @@ export default function LessonsPage() {
                         <h4 className="text-lg font-semibold text-white mb-3">
                           {concept.title}
                         </h4>
-                        <p className="text-gray-300 mb-4 leading-relaxed">
-                          {concept.explanation}
-                        </p>
+                        <div className="text-gray-300 mb-4 leading-relaxed">
+                          {concept.explanation.split('\n').map((paragraph, pIndex) => (
+                            <p key={pIndex} className="mb-3">
+                              {paragraph.trim()}
+                            </p>
+                          ))}
+                        </div>
                         <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
                           <p className="text-blue-300 text-sm">
-                            <strong>Example:</strong> {concept.example}
+                            <strong>Example:</strong>
                           </p>
+                          <div className="text-blue-300 text-sm mt-2">
+                            {concept.example.split('\n').map((line, lIndex) => (
+                              <p key={lIndex} className="mb-1">
+                                {line.trim()}
+                              </p>
+                            ))}
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -991,7 +1001,13 @@ export default function LessonsPage() {
                         key={index}
                         className="bg-gradient-to-r from-red-600/10 to-red-700/10 border border-red-500/30 rounded-xl p-4 hover:border-red-500/50 transition-all duration-300"
                       >
-                        <p className="text-red-300">• {mistake}</p>
+                        <div className="text-red-300">
+                          {mistake.split('\n').map((line, lIndex) => (
+                            <p key={lIndex} className={lIndex === 0 ? "mb-2" : "mb-1"}>
+                              {lIndex === 0 ? "• " : ""}{line.trim()}
+                            </p>
+                          ))}
+                        </div>
                       </div>
                     ))}
                   </div>

@@ -424,6 +424,14 @@ You must return only a single valid JSON object, with NO markdown formatting, NO
 - Make the practice questions representative of common interview mistakes.
 - Explanations must be detailed, helpful, and refer back to key concepts.
 
+**CRITICAL FORMATTING REQUIREMENTS:**
+- Keep explanations concise and well-structured (2-4 sentences per concept)
+- Use bullet points and clear paragraph breaks
+- Break complex topics into digestible sections
+- Use clear headings and subheadings within explanations
+- Avoid wall-of-text responses - use proper spacing and structure
+- Make examples concrete and easy to follow
+
 **For ADVANCED/HARD lessons specifically:**
 - Include step-by-step calculations and formulas
 - Provide complex scenarios with multiple variables
@@ -431,6 +439,7 @@ You must return only a single valid JSON object, with NO markdown formatting, NO
 - Include industry-specific terminology and methodologies
 - Address common modeling errors and how to avoid them
 - Provide Excel formulas or modeling approaches where relevant
+- **IMPORTANT:** Structure complex explanations with clear sections, bullet points, and proper spacing
 
 Your goal is to help the user go from "I kinda get it" to "I could confidently explain this in an interview."
 `,
