@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { createPortal } from "react-dom";
 import { GuideModal } from "@/components/GuideModal";
 
 // Available categories for quiz selection
@@ -249,17 +248,8 @@ export default function Home() {
                 </button>
                 
                 {/* Dropdown Menu */}
-                {isCategoryDropdownOpen && typeof window !== 'undefined' && createPortal(
-                  <div 
-                    className="fixed bg-gradient-to-br from-gray-800/95 to-gray-900/95 border border-gray-600/30 rounded-xl shadow-2xl z-[9999] backdrop-blur-sm pointer-events-auto"
-                    style={{
-                      top: '50%',
-                      left: '50%',
-                      transform: 'translate(-50%, -50%)',
-                      width: '256px',
-                      maxHeight: '240px'
-                    }}
-                  >
+                {isCategoryDropdownOpen && (
+                  <div className="absolute top-full left-0 mt-2 w-64 bg-gradient-to-br from-gray-800/95 to-gray-900/95 border border-gray-600/30 rounded-xl shadow-2xl z-[9999] backdrop-blur-sm pointer-events-auto">
                     <div className="p-2 max-h-60 overflow-y-auto">
                       {Object.entries(QUIZ_CATEGORIES).map(([key, label]) => (
                         <button
@@ -278,8 +268,7 @@ export default function Home() {
                         </button>
                       ))}
                     </div>
-                  </div>,
-                  document.body
+                  </div>
                 )}
               </div>
 
@@ -385,17 +374,8 @@ export default function Home() {
                 </button>
                 
                 {/* Dropdown Menu */}
-                {isCategoryDropdownOpen && typeof window !== 'undefined' && createPortal(
-                  <div 
-                    className="fixed bg-gradient-to-br from-gray-800/95 to-gray-900/95 border border-gray-600/30 rounded-xl shadow-2xl z-[9999] backdrop-blur-sm pointer-events-auto"
-                    style={{
-                      top: '50%',
-                      left: '50%',
-                      transform: 'translate(-50%, -50%)',
-                      width: '256px',
-                      maxHeight: '240px'
-                    }}
-                  >
+                {isCategoryDropdownOpen && (
+                  <div className="absolute top-full left-0 mt-2 w-64 bg-gradient-to-br from-gray-800/95 to-gray-900/95 border border-gray-600/30 rounded-xl shadow-2xl z-[9999] backdrop-blur-sm pointer-events-auto">
                     <div className="p-2 max-h-60 overflow-y-auto">
                       {Object.entries(QUIZ_CATEGORIES).map(([key, label]) => (
                         <button
@@ -414,8 +394,7 @@ export default function Home() {
                         </button>
                       ))}
                     </div>
-                  </div>,
-                  document.body
+                  </div>
                 )}
               </div>
 
