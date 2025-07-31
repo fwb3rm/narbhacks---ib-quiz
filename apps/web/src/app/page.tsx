@@ -156,7 +156,7 @@ export default function Home() {
       </header>
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden">
+      <section className="relative">
         <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-purple-600/20"></div>
         <div className="absolute inset-0 opacity-30">
           <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-purple-600/10"></div>
@@ -249,7 +249,7 @@ export default function Home() {
                 
                 {/* Dropdown Menu */}
                 {isCategoryDropdownOpen && (
-                  <div className="absolute top-full left-0 mt-2 w-64 bg-gradient-to-br from-gray-800/95 to-gray-900/95 border border-gray-600/30 rounded-xl shadow-2xl z-[100] backdrop-blur-sm">
+                  <div className="absolute top-full left-0 mt-2 w-64 bg-gradient-to-br from-gray-800/95 to-gray-900/95 border border-gray-600/30 rounded-xl shadow-2xl z-[9999] backdrop-blur-sm">
                     <div className="p-2 max-h-60 overflow-y-auto">
                       {Object.entries(QUIZ_CATEGORIES).map(([key, label]) => (
                         <button
@@ -375,7 +375,7 @@ export default function Home() {
                 
                 {/* Dropdown Menu */}
                 {isCategoryDropdownOpen && (
-                  <div className="absolute top-full left-0 mt-2 w-64 bg-gradient-to-br from-gray-800/95 to-gray-900/95 border border-gray-600/30 rounded-xl shadow-2xl z-[100] backdrop-blur-sm">
+                  <div className="absolute top-full left-0 mt-2 w-64 bg-gradient-to-br from-gray-800/95 to-gray-900/95 border border-gray-600/30 rounded-xl shadow-2xl z-[9999] backdrop-blur-sm">
                     <div className="p-2 max-h-60 overflow-y-auto">
                       {Object.entries(QUIZ_CATEGORIES).map(([key, label]) => (
                         <button
