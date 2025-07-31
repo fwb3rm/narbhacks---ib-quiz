@@ -16,6 +16,7 @@ import type {
 import type * as lessons from "../lessons.js";
 import type * as performance from "../performance.js";
 import type * as quiz from "../quiz.js";
+import type * as training from "../training.js";
 
 /**
  * A utility for referencing Convex functions in your app's API.
@@ -29,6 +30,7 @@ declare const fullApi: ApiFromModules<{
   lessons: typeof lessons;
   performance: typeof performance;
   quiz: typeof quiz;
+  training: typeof training;
 }>;
 export declare const api: FilterApi<
   typeof fullApi,
