@@ -1,16 +1,6 @@
 # InvestIQ - AI-Powered Investment Banking Preparation Platform
 
-<div align="center">
-
-![InvestIQ Logo](https://img.shields.io/badge/InvestIQ-AI%20Powered%20IB%20Prep-blue?style=for-the-badge&logo=react)
-![Next.js](https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?style=for-the-badge&logo=tailwind-css)
-![Convex](https://img.shields.io/badge/Convex-Database-orange?style=for-the-badge)
-
 *Revolutionize your investment banking interview preparation with AI-powered learning*
-
-[🚀 Live Demo](#) • [📖 Documentation](#) • [🐛 Report Bug](#) • [💡 Request Feature](#)
 
 </div>
 
@@ -28,6 +18,7 @@ InvestIQ is a cutting-edge web application designed to revolutionize investment 
 - **🎓 Personalized Lessons** - AI-generated content based on your mistakes
 - **🏆 Gamified Learning** - Point system and achievement tracking
 - **📱 Modern UI/UX** - Beautiful, responsive design with smooth animations
+- **🔐 No Authentication Required** - Start learning immediately without sign-up
 
 ## 🚀 Quick Start
 
@@ -55,8 +46,6 @@ InvestIQ is a cutting-edge web application designed to revolutionize investment 
    Create a `.env.local` file in `apps/web/` with:
    ```env
    OPENROUTER_API_KEY="your-openrouter-api-key"
-   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="your-clerk-publishable-key"
-   CLERK_SECRET_KEY="your-clerk-secret-key"
    NEXT_PUBLIC_CONVEX_URL="your-convex-url"
    CONVEX_DEPLOYMENT="your-convex-deployment"
    ```
@@ -81,7 +70,6 @@ InvestIQ is a cutting-edge web application designed to revolutionize investment 
 | **TypeScript** | Type-safe JavaScript |
 | **Tailwind CSS** | Utility-first CSS framework |
 | **Convex** | Real-time database and backend |
-| **Clerk** | Authentication and user management |
 | **OpenAI/OpenRouter** | AI-powered question generation |
 | **pnpm** | Fast, disk space efficient package manager |
 | **Turbo** | Monorepo build system |
@@ -203,10 +191,6 @@ Create a `.env.local` file in `apps/web/`:
 # AI Services
 OPENROUTER_API_KEY="your-openrouter-api-key"
 
-# Authentication
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="your-clerk-publishable-key"
-CLERK_SECRET_KEY="your-clerk-secret-key"
-
 # Database
 NEXT_PUBLIC_CONVEX_URL="your-convex-url"
 CONVEX_DEPLOYMENT="your-convex-deployment"
@@ -235,44 +219,13 @@ CONVEX_DEPLOYMENT="your-convex-deployment"
 2. **Set environment variables** in Vercel dashboard
 3. **Deploy automatically** on every push to main branch
 
-### Other Platforms
 
-The app can be deployed to any platform that supports Next.js:
-- **Netlify**
-- **Railway**
-- **Heroku**
-- **AWS Amplify**
 
-## 🤝 Contributing
 
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
 
-### Development Setup
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Make your changes
-4. Commit: `git commit -m 'Add amazing feature'`
-5. Push: `git push origin feature/amazing-feature`
-6. Open a Pull Request
 
-## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- **OpenAI** for AI capabilities
-- **Convex** for real-time database
-- **Clerk** for authentication
-- **Next.js** team for the amazing framework
-- **Tailwind CSS** for the utility-first CSS framework
-
-## 📞 Support
-
-- **Documentation**: [Link to docs]
-- **Issues**: [GitHub Issues](https://github.com/fwb3rm/narbhacks---ib-quiz/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/fwb3rm/narbhacks---ib-quiz/discussions)
 
 ## 🎯 Roadmap
 
@@ -288,8 +241,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 <div align="center">
 
-**Made with ❤️ for aspiring investment bankers**
-
-[⭐ Star this repo](https://github.com/fwb3rm/narbhacks---ib-quiz) • [🐛 Report a bug](https://github.com/fwb3rm/narbhacks---ib-quiz/issues) • [💡 Request a feature](https://github.com/fwb3rm/narbhacks---ib-quiz/issues)
 
 </div> 
