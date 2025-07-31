@@ -103,4 +103,20 @@ export default defineSchema({
   })
     .index("by_user", ["userId"])
     .index("by_subcategory", ["subcategory"]),
+
+  // Training data table to store AI training knowledge
+  trainingData: defineTable({
+    category: v.string(),
+    subcategory: v.string(),
+    content: v.string(),
+    keyConcepts: v.array(v.string()),
+    formulas: v.array(v.string()),
+    interviewQuestions: v.array(v.string()),
+    bestPractices: v.array(v.string()),
+    pitfalls: v.array(v.string()),
+    sourceFile: v.string(),
+    createdAt: v.number(),
+  })
+    .index("by_category", ["category"])
+    .index("by_subcategory", ["subcategory"]),
 });
