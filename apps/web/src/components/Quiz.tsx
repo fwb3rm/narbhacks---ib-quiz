@@ -4,6 +4,7 @@ import { useAction, useMutation } from "convex/react";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { ProgressService } from "@/lib/progress";
 import { api } from "../../convex/_generated/api";
 
@@ -20,6 +21,9 @@ interface QuestionType {
 }
 
 export default function Quiz() {
+  const searchParams = useSearchParams();
+  const selectedCategory = searchParams.get('category') || 'all';
+  
   const saveQuizResult = useMutation(api.quiz.saveQuizResult);
   const generateQuestion = useAction(api.quiz.generateQuestion);
   const [question, setQuestion] = useState<QuestionType | null>(null);
@@ -106,7 +110,7 @@ export default function Quiz() {
 
       // Call the AI API directly through the web app's API route
       const response = await fetch(
-        `/api/generate-question?difficulty=${nextDifficulty}`
+        `/api/generate-question?difficulty=${nextDifficulty}${selectedCategory !== 'all' ? `&category=${selectedCategory}` : ''}`
       );
 
       if (!response.ok) {
@@ -167,7 +171,7 @@ export default function Quiz() {
     } finally {
       setIsLoading(false);
     }
-  }, [getNextDifficulty, generateQuestion, timeLeft]);
+  }, [getNextDifficulty, generateQuestion, timeLeft, selectedCategory]);
 
   useEffect(() => {
     // Add a small delay to ensure proper initialization

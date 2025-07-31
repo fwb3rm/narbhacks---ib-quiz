@@ -3,17 +3,21 @@ import { type NextRequest, NextResponse } from "next/server";
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const difficulty = searchParams.get("difficulty");
+  const category = searchParams.get("category");
 
   try {
-    const response = await fetch(
-      `http://localhost:3003/generate-question?difficulty=${difficulty}`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    const url = new URL("http://localhost:3003/generate-question");
+    url.searchParams.set("difficulty", difficulty || "medium");
+    if (category) {
+      url.searchParams.set("category", category);
+    }
+
+    const response = await fetch(url.toString(), {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
 
     if (!response.ok) {
       throw new Error(`API responded with status: ${response.status}`);

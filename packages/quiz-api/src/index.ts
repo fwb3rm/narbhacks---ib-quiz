@@ -14,7 +14,7 @@ const openrouter = new OpenAI({
   apiKey: process.env.OPENROUTER_API_KEY,
 });
 
-export async function generateQuestion(requestedDifficulty?: string) {
+export async function generateQuestion(requestedDifficulty?: string, requestedCategory?: string) {
   const topics = [
     "Accounting",
     "Accounting",
@@ -42,7 +42,11 @@ export async function generateQuestion(requestedDifficulty?: string) {
     "Technical Modeling",
     "Technical Modeling",
   ];
-  const randomTopic = topics[Math.floor(Math.random() * topics.length)];
+  
+  // If a specific category is requested, use it; otherwise pick randomly
+  const randomTopic = requestedCategory 
+    ? requestedCategory.charAt(0).toUpperCase() + requestedCategory.slice(1).toLowerCase()
+    : topics[Math.floor(Math.random() * topics.length)];
 
   // Define specific subcategories for each main topic
   const subcategories = {
@@ -562,8 +566,8 @@ app.use(
 
 app.get("/generate-question", async (req, res) => {
   try {
-    const { difficulty } = req.query;
-    const question = await generateQuestion(difficulty as string);
+    const { difficulty, category } = req.query;
+    const question = await generateQuestion(difficulty as string, category as string);
     if (!question) {
       return res
         .status(500)

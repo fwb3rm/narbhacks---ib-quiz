@@ -10,15 +10,30 @@ import {
   Target,
   TrendingUp,
   Zap,
+  ChevronDown,
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { GuideModal } from "@/components/GuideModal";
 
+// Available categories for quiz selection
+const QUIZ_CATEGORIES = {
+  "all": "All Categories",
+  "accounting": "Accounting",
+  "valuation": "Valuation", 
+  "M&A": "M&A",
+  "LBO": "LBO",
+  "capital markets": "Capital Markets",
+  "corporate finance": "Corporate Finance",
+  "technical modeling": "Technical Modeling",
+};
+
 export default function Home() {
   const [currentTextIndex, setCurrentTextIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isGuideOpen, setIsGuideOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
   const topics = [
     "Accounting",
     "LBOs",
@@ -56,6 +71,24 @@ export default function Home() {
 
     return () => clearTimeout(startAnimation);
   }, [topics.length]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (!target.closest('.category-dropdown')) {
+        setIsCategoryDropdownOpen(false);
+      }
+    };
+
+    if (isCategoryDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isCategoryDropdownOpen]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
@@ -202,8 +235,45 @@ export default function Home() {
               analytics.
             </p>
 
-            <div className="flex justify-center">
-              <Link href="/quiz">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              {/* Category Selector */}
+              <div className="relative category-dropdown">
+                <button
+                  type="button"
+                  onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
+                  className="flex items-center space-x-2 bg-gradient-to-r from-gray-700/50 to-gray-800/50 border border-gray-600/30 text-white px-6 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-gray-500/25 transform hover:-translate-y-1 transition-all duration-200"
+                >
+                  <span>{QUIZ_CATEGORIES[selectedCategory as keyof typeof QUIZ_CATEGORIES]}</span>
+                  <ChevronDown className={`w-5 h-5 transition-transform duration-200 ${isCategoryDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+                
+                {/* Dropdown Menu */}
+                {isCategoryDropdownOpen && (
+                  <div className="absolute top-full left-0 mt-2 w-64 bg-gradient-to-br from-gray-800/95 to-gray-900/95 border border-gray-600/30 rounded-xl shadow-2xl z-50 backdrop-blur-sm">
+                    <div className="p-2 max-h-60 overflow-y-auto">
+                      {Object.entries(QUIZ_CATEGORIES).map(([key, label]) => (
+                        <button
+                          key={key}
+                          onClick={() => {
+                            setSelectedCategory(key);
+                            setIsCategoryDropdownOpen(false);
+                          }}
+                          className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${
+                            selectedCategory === key
+                              ? "bg-gradient-to-r from-blue-600/20 to-purple-600/20 text-blue-300 border border-blue-500/30"
+                              : "text-gray-300 hover:text-white hover:bg-gray-700/50"
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Start Quiz Button */}
+              <Link href={selectedCategory === "all" ? "/quiz" : `/quiz?category=${selectedCategory}`}>
                 <button
                   type="button"
                   className="group bg-gradient-to-r from-blue-600 to-purple-600 text-white px-10 py-4 rounded-xl font-semibold text-lg shadow-2xl hover:shadow-blue-500/25 transform hover:-translate-y-1 transition-all duration-200 flex items-center space-x-3"
@@ -291,14 +361,53 @@ export default function Home() {
               Test your knowledge and improve your skills with our comprehensive
               AI-powered platform
             </p>
-            <Link href="/quiz">
-              <button
-                type="button"
-                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-12 py-4 rounded-xl font-semibold text-lg shadow-2xl hover:shadow-blue-500/25 transform hover:-translate-y-1 transition-all duration-200"
-              >
-                Start Practicing Now
-              </button>
-            </Link>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              {/* Category Selector */}
+              <div className="relative category-dropdown">
+                <button
+                  type="button"
+                  onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
+                  className="flex items-center space-x-2 bg-gradient-to-r from-gray-700/50 to-gray-800/50 border border-gray-600/30 text-white px-6 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-gray-500/25 transform hover:-translate-y-1 transition-all duration-200"
+                >
+                  <span>{QUIZ_CATEGORIES[selectedCategory as keyof typeof QUIZ_CATEGORIES]}</span>
+                  <ChevronDown className={`w-5 h-5 transition-transform duration-200 ${isCategoryDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+                
+                {/* Dropdown Menu */}
+                {isCategoryDropdownOpen && (
+                  <div className="absolute top-full left-0 mt-2 w-64 bg-gradient-to-br from-gray-800/95 to-gray-900/95 border border-gray-600/30 rounded-xl shadow-2xl z-50 backdrop-blur-sm">
+                    <div className="p-2 max-h-60 overflow-y-auto">
+                      {Object.entries(QUIZ_CATEGORIES).map(([key, label]) => (
+                        <button
+                          key={key}
+                          onClick={() => {
+                            setSelectedCategory(key);
+                            setIsCategoryDropdownOpen(false);
+                          }}
+                          className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${
+                            selectedCategory === key
+                              ? "bg-gradient-to-r from-blue-600/20 to-purple-600/20 text-blue-300 border border-blue-500/30"
+                              : "text-gray-300 hover:text-white hover:bg-gray-700/50"
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Start Quiz Button */}
+              <Link href={selectedCategory === "all" ? "/quiz" : `/quiz?category=${selectedCategory}`}>
+                <button
+                  type="button"
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-12 py-4 rounded-xl font-semibold text-lg shadow-2xl hover:shadow-blue-500/25 transform hover:-translate-y-1 transition-all duration-200"
+                >
+                  Start Practicing Now
+                </button>
+              </Link>
+            </div>
           </div>
         </div>
       </section>
